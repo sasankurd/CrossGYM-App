@@ -1,0 +1,22 @@
+name: crossgym
+description: CrossGYM - gym, running, CrossFit, Pilates and recovery workouts with profiles, achievements, a plan store and direct messages.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  path_drawing: ^1.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/art/
