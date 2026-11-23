@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/tokens.dart';
 import '../../data/app_state.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -56,8 +57,13 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: mine
-                                ? scheme.primaryContainer
-                                : scheme.surfaceContainerHighest,
+                                ? scheme.primary.withValues(alpha: 0.2)
+                                : AppColors.container,
+                            border: Border.all(
+                              color: mine
+                                  ? scheme.primary.withValues(alpha: 0.5)
+                                  : AppColors.hairline,
+                            ),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(m.text),

@@ -13,11 +13,13 @@ enum WorkoutType {
 }
 
 /// One exercise. [slug] is also the file name of its drawing in assets/art.
+/// [sub] is the sub-category shown as a pill in the exercise picker.
 class Exercise {
-  const Exercise(this.slug, this.type);
+  const Exercise(this.slug, this.type, this.sub);
 
   final String slug;
   final WorkoutType type;
+  final String sub;
 
   String get name => slug
       .split('-')
@@ -84,6 +86,24 @@ class ChatMessage {
   final DateTime sentAt;
 }
 
+/// One logged workout session.
+class WorkoutLog {
+  const WorkoutLog(this.type, this.at);
+
+  final WorkoutType type;
+  final DateTime at;
+}
+
+enum MedalTier {
+  bronze('Bronze'),
+  silver('Silver'),
+  gold('Gold'),
+  diamond('Diamond');
+
+  const MedalTier(this.label);
+  final String label;
+}
+
 class Achievement {
   const Achievement({
     required this.title,
@@ -91,6 +111,7 @@ class Achievement {
     required this.icon,
     required this.goal,
     required this.progress,
+    required this.tier,
   });
 
   final String title;
@@ -98,7 +119,60 @@ class Achievement {
   final IconData icon;
   final int goal;
   final int progress;
+  final MedalTier tier;
 
   bool get unlocked => progress >= goal;
-  double get fraction => (progress / goal).clamp(0.0, 1.0);
+  double get fraction => progress >= goal ? 1.0 : progress / goal;
+}
+
+/// One set inside a planned exercise.
+class SetEntry {
+  SetEntry({this.reps = 10, this.kg = 0});
+
+  int reps;
+  double kg;
+}
+
+class PlannedExercise {
+  PlannedExercise({required this.id, required this.exercise})
+      : sets = [SetEntry(), SetEntry(), SetEntry()];
+
+  final int id;
+  final Exercise exercise;
+  final List<SetEntry> sets;
+
+  /// Whether the sets are revealed (the star is on).
+  bool open = false;
+}
+
+enum AttachmentKind { plan, pr }
+
+class PostAttachment {
+  const PostAttachment({
+    required this.kind,
+    required this.title,
+    required this.detail,
+  });
+
+  final AttachmentKind kind;
+  final String title;
+  final String detail;
+}
+
+class Post {
+  const Post({
+    required this.id,
+    required this.authorId,
+    required this.text,
+    required this.createdAt,
+    this.attachment,
+    this.baseLikes = 0,
+  });
+
+  final String id;
+  final String authorId;
+  final String text;
+  final DateTime createdAt;
+  final PostAttachment? attachment;
+  final int baseLikes;
 }
