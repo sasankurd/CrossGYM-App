@@ -25,12 +25,18 @@ jobs:
       - name: Create web platform files
         run: flutter create . --platforms web --project-name crossgym --org com.crossgym
 
+      # flutter create adds a sample test that refers to a "MyApp" class this
+      # project does not have, so remove it.
+      - name: Remove generated sample test
+        run: rm -f test/widget_test.dart
+
       - run: flutter pub get
 
       - name: Check exercise drawings
         run: ./tool/check_assets.sh
 
-      - run: flutter analyze
+      # Real errors fail the build. Style hints and deprecation notices do not.
+      - run: flutter analyze --no-fatal-infos
 
       - name: Build web
         run: flutter build web --release

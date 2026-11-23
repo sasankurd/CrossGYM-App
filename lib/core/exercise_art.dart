@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_drawing/path_drawing.dart';
 
-/// Draws an exercise illustration from assets/art/<slug>.txt.
+/// Draws an exercise illustration from `assets/art/<slug>.txt`.
 ///
 /// Each file holds one SVG path per line (one line per pose). The art comes
 /// from GymMane / Workout Guide / Everkinetic under CC BY-SA 4.0, see

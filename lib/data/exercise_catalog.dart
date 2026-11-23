@@ -1,6 +1,6 @@
 import 'models.dart';
 
-/// Every slug here must exist as assets/art/<slug>.txt
+/// Every slug here must exist as `assets/art/<slug>.txt`
 /// (checked by tool/check_assets.sh).
 const List<Exercise> kExercises = [
   // Running and cardio
