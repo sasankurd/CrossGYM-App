@@ -1,0 +1,52 @@
+name: Deploy web to Cloudflare Pages
+
+# Builds the Flutter web app and publishes it to Cloudflare Pages on every push
+# to main. You can also run it by hand from the Actions tab.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # The repo only holds Dart code and assets, so generate the web folder.
+      - name: Create web platform files
+        run: flutter create . --platforms web --project-name crossgym --org com.crossgym
+
+      - run: flutter pub get
+
+      - name: Check exercise drawings
+        run: ./tool/check_assets.sh
+
+      - run: flutter analyze
+
+      - name: Build web
+        run: flutter build web --release
+
+      # Creates the Pages project the first time. Fails harmlessly if it exists.
+      - name: Create Pages project
+        uses: cloudflare/wrangler-action@v3
+        continue-on-error: true
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages project create crossgym --production-branch=main
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy build/web --project-name=crossgym --branch=main

@@ -26,6 +26,21 @@ flutter pub get
 flutter run
 ```
 
+## Publish the web version (Cloudflare Pages)
+
+A GitHub Action in `.github/workflows/deploy-web.yml` builds the web app and
+deploys it to Cloudflare Pages on every push to `main`. Set it up once:
+
+1. In Cloudflare, create an API token (My Profile → API Tokens → Create Token)
+   with the permission **Account → Cloudflare Pages → Edit**.
+2. Copy your Account ID from the Cloudflare dashboard (Workers & Pages page).
+3. In the GitHub repo go to Settings → Secrets and variables → Actions and add
+   two secrets: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+4. Push to `main`, or run the workflow from the Actions tab.
+
+Your link will be `https://crossgym.pages.dev` (Cloudflare adds a suffix if the
+name is taken; the deploy log shows the exact address).
+
 ## Layout
 
 ```
