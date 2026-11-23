@@ -50,7 +50,7 @@ class WorkoutTypeScreen extends StatelessWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: AppColors.container,
+                    color: AppColors.glassFill,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.hairline),
                   ),

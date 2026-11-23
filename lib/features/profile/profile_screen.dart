@@ -26,7 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final unlocked = achievements.where((a) => a.unlocked).length;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 120),
       children: [
         ProfileHeaderCard(
           name: state.me.name,

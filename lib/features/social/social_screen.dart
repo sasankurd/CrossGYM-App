@@ -23,7 +23,7 @@ class _SocialScreenState extends State<SocialScreen> {
     final state = AppScope.of(context);
     final text = Theme.of(context).textTheme;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 120),
       children: [
         Text('Social', style: text.headlineSmall),
         const SizedBox(height: 12),

@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -47,6 +45,11 @@ class _CrossGymAppState extends State<CrossGymApp> {
             theme: theme,
             darkTheme: theme,
             themeMode: ThemeMode.dark,
+            builder: (context, child) => AmbientBackground(
+              primary: _state.theme.primary,
+              secondary: _state.theme.secondary,
+              child: child ?? const SizedBox.shrink(),
+            ),
             home: const AppShell(),
           );
         },
@@ -77,25 +80,27 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           Positioned.fill(
-            child: Padding(
-              padding: EdgeInsets.only(top: top + 64),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1152),
-                  child: IndexedStack(index: _index, children: _pages),
-                ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1152),
+                child: IndexedStack(index: _index, children: _pages),
               ),
             ),
           ),
           Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: _GlassHeader(onCoach: () => _showCoachSheet(context)),
+            top: top + 8,
+            left: 12,
+            right: 12,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1152),
+                child: _GlassHeader(onCoach: () => _showCoachSheet(context)),
+              ),
+            ),
           ),
           Positioned(
             left: 0,
@@ -122,74 +127,62 @@ class _GlassHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
-    final top = MediaQuery.paddingOf(context).top;
     final width = MediaQuery.sizeOf(context).width;
     final text = Theme.of(context).textTheme;
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          padding: EdgeInsets.fromLTRB(16, top + 8, 12, 8),
-          decoration: const BoxDecoration(
-            color: AppColors.header,
-            border: Border(bottom: BorderSide(color: AppColors.hairline)),
-          ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1152),
-              child: Row(
+    return GlassSurface(
+      radius: 28,
+      sigma: 24,
+      strong: true,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+        child: Row(
+          children: [
+            const _Monogram(),
+            if (width >= 420) ...[
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const _Monogram(),
-                  if (width >= 420) ...[
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('CrossGYM', style: text.titleLarge),
-                        Text(
-                          'HYBRID ATHLETE OS',
-                          style: mono(
-                            size: 9,
-                            weight: FontWeight.w500,
-                            color: AppColors.gray400,
-                          ),
-                        ),
-                      ],
+                  Text('CrossGYM', style: text.titleLarge),
+                  Text(
+                    'HYBRID ATHLETE OS',
+                    style: mono(
+                      size: 9,
+                      weight: FontWeight.w500,
+                      color: AppColors.gray400,
                     ),
-                  ],
-                  const Spacer(),
-                  Pill(
-                    'CNS ${(state.readiness * 100).round()}%',
-                    color: AppColors.emerald,
-                    icon: Icons.bolt,
                   ),
-                  const SizedBox(width: 6),
-                  Pill(
-                    '${state.streakDays}',
-                    color: AppColors.orange,
-                    icon: Icons.local_fire_department,
-                  ),
-                  const _ThemeMenu(),
-                  if (width >= 600)
-                    FilledButton.icon(
-                      onPressed: onCoach,
-                      icon: const Icon(Icons.auto_awesome, size: 18),
-                      label: const Text('Coach'),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(0, 38),
-                      ),
-                    )
-                  else
-                    IconButton.filled(
-                      onPressed: onCoach,
-                      tooltip: 'Coach',
-                      icon: const Icon(Icons.auto_awesome, size: 18),
-                    ),
                 ],
               ),
+            ],
+            const Spacer(),
+            Pill(
+              'CNS ${(state.readiness * 100).round()}%',
+              color: AppColors.emerald,
+              icon: Icons.bolt,
             ),
-          ),
+            const SizedBox(width: 8),
+            Pill(
+              '${state.streakDays}',
+              color: AppColors.orange,
+              icon: Icons.local_fire_department,
+            ),
+            const _ThemeMenu(),
+            if (width >= 600)
+              FilledButton.icon(
+                onPressed: onCoach,
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: const Text('Coach'),
+                style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
+              )
+            else
+              IconButton.filled(
+                onPressed: onCoach,
+                tooltip: 'Coach',
+                icon: const Icon(Icons.auto_awesome, size: 18),
+              ),
+          ],
         ),
       ),
     );
@@ -278,46 +271,83 @@ class _Dock extends StatelessWidget {
   final int index;
   final ValueChanged<int> onSelect;
 
-  static const _items = <(IconData, String)>[
-    (Icons.space_dashboard_outlined, 'HOME'),
-    (Icons.checklist_rounded, 'PLAN'),
-    (Icons.storefront_outlined, 'STORE'),
-    (Icons.forum_outlined, 'SOCIAL'),
-    (Icons.person_outline, 'PROFILE'),
+  static const _items = <(IconData, IconData, String)>[
+    (Icons.space_dashboard_outlined, Icons.space_dashboard, 'HOME'),
+    (Icons.checklist_rounded, Icons.checklist_rounded, 'PLAN'),
+    (Icons.storefront_outlined, Icons.storefront, 'STORE'),
+    (Icons.forum_outlined, Icons.forum, 'SOCIAL'),
+    (Icons.person_outline, Icons.person, 'PROFILE'),
   ];
 
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final scheme = Theme.of(context).colorScheme;
+    final n = _items.length;
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 0, 16, bottom + 12),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 448),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.header,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppColors.hairlineStrong),
-                ),
-                child: Row(
-                  children: [
-                    for (var i = 0; i < _items.length; i++)
-                      Expanded(
-                        child: _DockItem(
-                          icon: _items[i].$1,
-                          label: _items[i].$2,
-                          active: i == index,
-                          onTap: () => onSelect(i),
+          child: GlassSurface(
+            radius: 36,
+            sigma: 28,
+            strong: true,
+            child: SizedBox(
+              height: 72,
+              child: Stack(
+                children: [
+                  // The lens: a brighter piece of glass that slides to the
+                  // selected tab.
+                  AnimatedAlign(
+                    duration: const Duration(milliseconds: 320),
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment(-1 + 2 * index / (n - 1), 0),
+                    child: FractionallySizedBox(
+                      widthFactor: 1 / n,
+                      heightFactor: 1,
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: scheme.primary.withValues(alpha: 0.35),
+                                blurRadius: 18,
+                              ),
+                            ],
+                          ),
+                          child: GlassSurface(
+                            radius: 30,
+                            blur: false,
+                            tint: [
+                              scheme.primary.withValues(alpha: 0.34),
+                              Colors.white.withValues(alpha: 0.10),
+                            ],
+                            child: const SizedBox.expand(),
+                          ),
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                  ),
+                  Material(
+                    type: MaterialType.transparency,
+                    child: Row(
+                    children: [
+                      for (var i = 0; i < n; i++)
+                        Expanded(
+                          child: _DockItem(
+                            icon: i == index ? _items[i].$2 : _items[i].$1,
+                            label: _items[i].$3,
+                            active: i == index,
+                            onTap: () => onSelect(i),
+                          ),
+                        ),
+                    ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -342,41 +372,23 @@ class _DockItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = active ? scheme.primary : AppColors.gray400;
+    final color = active ? Colors.white : AppColors.gray400;
     return InkWell(
       onTap: onTap,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            top: 0,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: active ? 28 : 0,
-              height: 3,
-              decoration: BoxDecoration(
-                color: scheme.primary,
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(3)),
-                boxShadow: [
-                  BoxShadow(
-                    color: scheme.primary.withValues(alpha: 0.35),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
+      borderRadius: BorderRadius.circular(30),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedScale(
+              scale: active ? 1.12 : 1,
+              duration: const Duration(milliseconds: 220),
+              child: Icon(icon, color: color, size: 24),
             ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(height: 3),
-              Text(label, style: mono(size: 9, color: color)),
-            ],
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(label, style: mono(size: 9, color: color)),
+          ],
+        ),
       ),
     );
   }
@@ -394,7 +406,7 @@ void _showCoachSheet(BuildContext context) {
       : '${type.label} is the type you trained least in the last 7 days.';
   showModalBottomSheet<void>(
     context: context,
-    backgroundColor: AppColors.card,
+    backgroundColor: AppColors.sheet,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),

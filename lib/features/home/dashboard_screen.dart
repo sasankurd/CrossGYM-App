@@ -23,7 +23,7 @@ class DashboardScreen extends StatelessWidget {
     final today = DateTime.now();
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 120),
       children: [
         NeoCard(
           accent: true,

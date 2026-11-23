@@ -58,7 +58,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           decoration: BoxDecoration(
                             color: mine
                                 ? scheme.primary.withValues(alpha: 0.2)
-                                : AppColors.container,
+                                : AppColors.glassFill,
                             border: Border.all(
                               color: mine
                                   ? scheme.primary.withValues(alpha: 0.5)

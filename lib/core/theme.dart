@@ -50,11 +50,11 @@ ThemeData buildTheme(AnimeTheme t) {
     useMaterial3: true,
     brightness: Brightness.dark,
     colorScheme: scheme,
-    scaffoldBackgroundColor: AppColors.canvas,
+    scaffoldBackgroundColor: Colors.transparent,
     canvasColor: AppColors.container,
     textTheme: text,
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,

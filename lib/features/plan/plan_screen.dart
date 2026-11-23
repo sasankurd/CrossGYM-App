@@ -26,7 +26,7 @@ class _PlanScreenState extends State<PlanScreen> {
     final items = state.planFor(_day);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 120),
       children: [
         Text('Weekly plan', style: text.headlineSmall),
         const SizedBox(height: 4),
@@ -146,7 +146,7 @@ class _DayChip extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? primary.withValues(alpha: 0.14) : AppColors.container,
+          color: selected ? primary.withValues(alpha: 0.14) : AppColors.glassFill,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: selected ? primary : AppColors.hairline),
           boxShadow: selected
@@ -200,7 +200,7 @@ class _PlannedCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: AppColors.container,
+                  color: AppColors.glassFill,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.hairline),
                 ),

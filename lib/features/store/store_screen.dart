@@ -24,7 +24,7 @@ class _StoreScreenState extends State<StoreScreen> {
     final bought = state.purchasedPlans;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 120),
       children: [
         Row(
           children: [

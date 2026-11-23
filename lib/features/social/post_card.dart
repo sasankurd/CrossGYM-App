@@ -18,7 +18,7 @@ class AttachmentCard extends StatelessWidget {
     final color = isPr ? AppColors.amber : Theme.of(context).colorScheme.secondary;
     return NeoCard(
       radius: 16,
-      color: AppColors.container,
+      color: AppColors.glassFill,
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [

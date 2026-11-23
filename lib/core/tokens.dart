@@ -12,6 +12,9 @@ class AppColors {
   static const Color input = Color(0xFF100E1D);
   static const Color inputRaised = Color(0xFF16132B);
 
+  static const Color glassFill = Color(0x14FFFFFF); // white at 8%
+  static const Color sheet = Color(0xF0141228); // bottom sheets
+
   static const Color emerald = Color(0xFF10B981); // readiness, completion
   static const Color amber = Color(0xFFF59E0B); // CrossFit, PRs, stars
   static const Color orange = Color(0xFFF97316); // streaks

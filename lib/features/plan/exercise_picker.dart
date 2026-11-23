@@ -14,7 +14,7 @@ Future<void> showExercisePicker(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppColors.card,
+    backgroundColor: AppColors.sheet,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -144,7 +144,7 @@ class _ExercisePickerState extends State<_ExercisePicker> {
               decoration: BoxDecoration(
                 color: selected
                     ? primary.withValues(alpha: 0.14)
-                    : AppColors.container,
+                    : AppColors.glassFill,
                 borderRadius: BorderRadius.circular(999),
                 border:
                     Border.all(color: selected ? primary : AppColors.hairline),
@@ -195,7 +195,7 @@ class _ExercisePickerState extends State<_ExercisePicker> {
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: AppColors.container,
+                    color: AppColors.glassFill,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(child: ExerciseArt(slug: e.slug, size: 76)),
