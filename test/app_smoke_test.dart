@@ -1,7 +1,6 @@
 import 'package:crossgym/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets('every tab draws without errors', (tester) async {
@@ -23,9 +22,7 @@ void main() {
     };
     addTearDown(() => FlutterError.onError = oldHandler);
 
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    await tester.pumpWidget(CrossGymApp(prefs: prefs));
+    await tester.pumpWidget(const CrossGymApp());
     await tester.pump(const Duration(milliseconds: 500));
 
     Future<void> tap(String label) async {
