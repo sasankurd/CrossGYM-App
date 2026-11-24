@@ -34,8 +34,14 @@ void main() {
       print('STEP tap $label');
       final f = find.text(label);
       await tester.ensureVisible(f.first);
+      // ignore: avoid_print
+      print('  visible');
       await tester.tap(f.first);
-      await tester.pump(const Duration(milliseconds: 500));
+      // ignore: avoid_print
+      print('  tapped');
+      await tester.pump(const Duration(milliseconds: 100));
+      // ignore: avoid_print
+      print('  pumped');
     }
 
     await tap('Continue as guest');
