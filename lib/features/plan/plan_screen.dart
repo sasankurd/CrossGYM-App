@@ -5,6 +5,7 @@ import '../../core/tokens.dart';
 import '../../core/widgets.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
+import '../watch/heart_widgets.dart';
 import 'exercise_picker.dart';
 import 'program_picker.dart';
 
@@ -32,6 +33,7 @@ class _PlanScreenState extends State<PlanScreen> {
         const TabHeader(
           kicker: 'PROGRAMS AND WEEKLY PLAN',
           title: 'Training studio',
+          trailing: [HeartRatePill()],
         ),
         Text(
           'Tap the star on an exercise to open and edit its sets.',

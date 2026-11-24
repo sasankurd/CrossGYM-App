@@ -10,13 +10,17 @@ import 'exercise_catalog.dart';
 import 'models.dart';
 import 'nutrition.dart';
 import 'program_templates.dart';
+import 'watch/heart_rate.dart';
+import 'watch/watch_link.dart';
 
 /// In-memory app state with seed data.
 ///
 /// Follow, messages, posts and the store are local only for now. Replace this
 /// class with repositories backed by a real service (see docs/BACKEND.md).
 class AppState extends ChangeNotifier {
-  AppState({SharedPreferences? prefs}) : _prefs = prefs {
+  AppState({SharedPreferences? prefs, HeartRateSource? heartRate})
+      : _prefs = prefs,
+        watch = WatchLink(source: heartRate) {
     _loadAccounts();
     _seed();
     _restoreSession();
@@ -25,6 +29,9 @@ class AppState extends ChangeNotifier {
   static const String meId = 'me';
 
   final SharedPreferences? _prefs;
+
+  /// The heart-rate watch connection and its live readings.
+  final WatchLink watch;
   late AppUser me;
   final Map<String, AppUser> _users = {};
   final List<Plan> _plans = [];
@@ -199,6 +206,7 @@ class AppState extends ChangeNotifier {
     _profile = null;
     _foods.clear();
     _prefs?.remove('session');
+    watch.disconnect();
     _resetWorld();
     notifyListeners();
   }
@@ -282,6 +290,12 @@ class AppState extends ChangeNotifier {
     _foods.removeWhere((f) => f.id == id);
     _saveFoods();
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    watch.dispose();
+    super.dispose();
   }
 
   // ---- theme ---------------------------------------------------------------

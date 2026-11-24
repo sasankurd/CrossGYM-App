@@ -5,6 +5,7 @@ import '../../core/widgets.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../nutrition/calorie_summary.dart';
+import '../watch/heart_widgets.dart';
 import 'coach_sheet.dart';
 import '../workouts/workout_type_screen.dart';
 
@@ -24,8 +25,6 @@ class DashboardScreen extends StatelessWidget {
     final maxCount = week.fold<int>(1, (m, c) => c > m ? c : m);
     final today = DateTime.now();
 
-    final streak = state.streakDays;
-
     return ListView(
       padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 24),
       children: [
@@ -33,8 +32,7 @@ class DashboardScreen extends StatelessWidget {
           kicker: 'CROSSGYM OS',
           title: 'Command hub',
           trailing: [
-            Pill('${streak}D streak',
-                color: AppColors.orange, icon: Icons.local_fire_department),
+            const WatchButton(),
             IconButton.filled(
               onPressed: () => showCoachSheet(context),
               tooltip: 'Coach',
@@ -79,6 +77,7 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
         ),
+        const LiveHeartCard(),
         const SizedBox(height: 16),
         const SectionLabel('Quick launch session'),
         const SizedBox(height: 10),

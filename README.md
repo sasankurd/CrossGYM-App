@@ -22,6 +22,7 @@ at run time, so the first load needs internet.
 - Social: feed with likes, posts with plan or PR attachments, follow, profiles
 - Store: browse, get free plans, publish your own plan with a price
 - Direct messages with a chat screen
+- Watch connection: live heart rate from Garmin (with broadcast on) and Bluetooth straps, in Chrome or Edge ([docs/WATCH.md](docs/WATCH.md))
 - Sign up and sign in with email, Apple, Gmail, Facebook or as a guest (demo: see [docs/AUTH.md](docs/AUTH.md))
 - First-run questions (age, height, weight, training week, training types, goal) that set a daily calorie target for losing, maintaining or gaining weight
 - Calorie tracker: log food by meal, see calories and protein/carbs/fat against your target, on Home and in its own screen
