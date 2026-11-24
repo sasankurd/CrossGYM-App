@@ -6,10 +6,12 @@ and direct messages.
 
 ## Design
 
-Dark "Hybrid Neo-Tokyo" look: obsidian-violet canvas, glass header and floating
-tab dock, six switchable colour themes (palette icon in the header), Space
-Grotesk headings, Inter body text and JetBrains Mono for numbers. Fonts load
-from Google Fonts at run time, so the first load needs internet.
+"CrossGym OS" look: a near-black background (#06080D), flat dark cards with a
+faint white edge, volt (lime) and cyan accents, coral for calories, violet for
+the market. Inter throughout, heavy and tightly spaced for titles. Five tabs
+in a flat bottom bar: Hub, Train, Fuel, Market, Athlete. The palette icon in
+the Athlete tab switches to other colour themes. Fonts load from Google Fonts
+at run time, so the first load needs internet.
 
 ## What works now
 

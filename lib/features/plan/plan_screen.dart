@@ -27,10 +27,12 @@ class _PlanScreenState extends State<PlanScreen> {
     final items = state.planFor(_day);
 
     return ListView(
-      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 120),
+      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 24),
       children: [
-        Text('Plan', style: text.headlineSmall),
-        const SizedBox(height: 4),
+        const TabHeader(
+          kicker: 'PROGRAMS AND WEEKLY PLAN',
+          title: 'Training studio',
+        ),
         Text(
           'Tap the star on an exercise to open and edit its sets.',
           style: text.bodySmall?.copyWith(color: AppColors.gray400),

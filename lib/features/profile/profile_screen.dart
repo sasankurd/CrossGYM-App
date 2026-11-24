@@ -5,7 +5,7 @@ import '../../core/widgets.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../../data/nutrition.dart';
-import '../nutrition/nutrition_screen.dart';
+import '../nutrition/calorie_summary.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../social/post_card.dart';
 import '../social/post_composer.dart';
@@ -29,7 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final unlocked = achievements.where((a) => a.unlocked).length;
 
     return ListView(
-      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 120),
+      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 24),
       children: [
         ProfileHeaderCard(
           name: state.me.name,
@@ -285,10 +285,7 @@ class _GoalCard extends StatelessWidget {
             children: [
               Expanded(
                 child: FilledButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                        builder: (_) => const NutritionScreen()),
-                  ),
+                  onPressed: () => openFuel(context),
                   child: const Text('Open tracker'),
                 ),
               ),

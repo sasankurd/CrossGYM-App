@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'dart:ui' show ImageFilter;
+import 'dart:ui' show FontFeature;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,13 +7,19 @@ import 'package:google_fonts/google_fonts.dart';
 import '../data/models.dart';
 import 'tokens.dart';
 
-/// JetBrains Mono, used for reps, weights, timers, percentages and badges.
+/// Inter in tabular figures (every digit the same width), used for reps,
+/// weights, timers, percentages and badges.
 TextStyle mono({
   double size = 13,
   FontWeight weight = FontWeight.w600,
   Color color = AppColors.text,
 }) =>
-    GoogleFonts.jetBrainsMono(fontSize: size, fontWeight: weight, color: color);
+    GoogleFonts.inter(
+      fontSize: size,
+      fontWeight: weight,
+      color: color,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
 
 /// Accent color for each workout type.
 Color typeColor(BuildContext context, WorkoutType t) {
@@ -35,210 +41,119 @@ String ago(DateTime t) {
   return '${d.inDays}d';
 }
 
-/// Liquid glass: a frosted, translucent surface with a bright specular edge.
+/// A flat dark panel: solid fill, one-pixel faint edge, no blur.
 ///
-/// [tint] paints a two-colour glass gradient instead of plain white glass.
-/// [glow] draws a solid coloured edge and glow (used for selected items).
-/// With [blur] false the surface only draws a light fill, which is cheaper and
-/// right for glass nested inside glass.
-class GlassSurface extends StatelessWidget {
-  const GlassSurface({
+/// [borderColor] replaces the faint edge (used for accent and selected
+/// panels). [fill] replaces the card color.
+class Panel extends StatelessWidget {
+  const Panel({
     super.key,
     required this.child,
-    this.radius = 24,
-    this.sigma = 18,
-    this.tint,
-    this.strong = false,
-    this.glow,
-    this.blur = true,
+    this.radius = 20,
     this.fill,
+    this.borderColor,
+    this.borderWidth = 1,
   });
 
   final Widget child;
   final double radius;
-  final double sigma;
-  final List<Color>? tint;
-  final bool strong;
-  final Color? glow;
-  final bool blur;
   final Color? fill;
+  final Color? borderColor;
+  final double borderWidth;
 
   @override
   Widget build(BuildContext context) {
-    final shape = BorderRadius.circular(radius);
-    final colors = tint ??
-        [
-          Colors.white.withValues(alpha: strong ? 0.16 : 0.11),
-          Colors.white.withValues(alpha: strong ? 0.06 : 0.04),
-        ];
-    Widget body = CustomPaint(
-      foregroundPainter: _GlassEdgePainter(radius: radius, glow: glow),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: fill,
-          gradient: fill == null
-              ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: colors,
-                )
-              : null,
-          borderRadius: shape,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: fill ?? AppColors.card,
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(
+          color: borderColor ?? AppColors.hairline,
+          width: borderWidth,
         ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius - borderWidth),
         child: child,
       ),
     );
-    if (blur) {
-      body = BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-        child: body,
-      );
-    }
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: shape,
-        boxShadow: [
-          BoxShadow(
-            color: (glow ?? Colors.black).withValues(alpha: glow == null ? 0.22 : 0.35),
-            blurRadius: glow == null ? 24 : 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(borderRadius: shape, child: body),
-    );
   }
 }
 
-class _GlassEdgePainter extends CustomPainter {
-  _GlassEdgePainter({required this.radius, this.glow});
-
-  final double radius;
-  final Color? glow;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final rrect =
-        RRect.fromRectAndRadius(rect, Radius.circular(radius)).deflate(0.6);
-    final edge = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    if (glow != null) {
-      edge.color = glow!;
-    } else {
-      edge.shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.white.withValues(alpha: 0.50),
-          Colors.white.withValues(alpha: 0.08),
-          Colors.white.withValues(alpha: 0.03),
-          Colors.white.withValues(alpha: 0.28),
-        ],
-        stops: const [0, 0.35, 0.65, 1],
-      ).createShader(rect);
-    }
-    canvas.drawRRect(rrect, edge);
-
-    // Bright specular line along the top edge.
-    final inset = radius * 0.8;
-    if (size.width > inset * 2 + 8) {
-      final line = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..shader = LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0),
-            Colors.white.withValues(alpha: 0.6),
-            Colors.white.withValues(alpha: 0),
-          ],
-        ).createShader(
-          Rect.fromLTWH(inset, 0, size.width - inset * 2, 1),
-        );
-      canvas.drawLine(Offset(inset, 1), Offset(size.width - inset, 1), line);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _GlassEdgePainter old) =>
-      old.radius != radius || old.glow != glow;
-}
-
-/// Soft colour glow behind the whole app. This is what the glass blurs, and it
-/// follows the selected anime theme.
+/// The flat black background behind the whole app.
 class AmbientBackground extends StatelessWidget {
-  const AmbientBackground({
-    super.key,
-    required this.primary,
-    required this.secondary,
-    required this.child,
-  });
+  const AmbientBackground({super.key, required this.child});
 
-  final Color primary;
-  final Color secondary;
   final Widget child;
-
-  Widget _orb({
-    double? top,
-    double? bottom,
-    double? left,
-    double? right,
-    required double size,
-    required Color color,
-    required double alpha,
-  }) {
-    return Positioned(
-      top: top,
-      bottom: bottom,
-      left: left,
-      right: right,
-      child: IgnorePointer(
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                color.withValues(alpha: alpha),
-                color.withValues(alpha: 0),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        const Positioned.fill(child: ColoredBox(color: AppColors.canvas)),
-        _orb(top: -140, left: -100, size: 440, color: primary, alpha: 0.42),
-        _orb(top: 240, right: -170, size: 460, color: secondary, alpha: 0.30),
-        _orb(bottom: -180, left: -90, size: 480, color: primary, alpha: 0.26),
-        _orb(bottom: 140, right: -110, size: 320, color: secondary, alpha: 0.16),
-        Positioned.fill(child: child),
-      ],
+    return ColoredBox(color: AppColors.canvas, child: child);
+  }
+}
+
+/// Top padding for scrolling pages. The shell already keeps content below the
+/// status bar, so this is just breathing room.
+double contentTop(BuildContext context) => 12;
+
+/// Title row at the top of a tab: optional small kicker, a heavy title, and
+/// trailing actions.
+class TabHeader extends StatelessWidget {
+  const TabHeader({
+    super.key,
+    required this.title,
+    this.kicker,
+    this.trailing = const [],
+  });
+
+  final String title;
+  final String? kicker;
+  final List<Widget> trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.secondary;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (kicker != null)
+                  Text(
+                    kicker!,
+                    style: mono(size: 11, weight: FontWeight.w700, color: primary)
+                        .copyWith(letterSpacing: 1.4),
+                  ),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                    color: AppColors.text,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          for (final w in trailing) ...[const SizedBox(width: 8), w],
+        ],
+      ),
     );
   }
 }
 
-/// Top padding for scrolling pages so content starts below the floating header
-/// but can still scroll underneath it.
-double contentTop(BuildContext context) =>
-    MediaQuery.paddingOf(context).top + 80;
-
-/// Glass card. [accent] tints it with the theme colours, [selected] draws the
-/// primary edge and glow. A custom [color] makes it a light nested tile.
+/// Flat card. [accent] gives it a faint primary edge, [selected] a full
+/// primary edge and tint. A custom [color] makes it a nested tile.
 class NeoCard extends StatelessWidget {
   const NeoCard({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
-    this.radius = 24,
+    this.radius = 20,
     this.accent = false,
     this.selected = false,
     this.onTap,
@@ -256,24 +171,23 @@ class NeoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final nested = color != null;
-    return GlassSurface(
+    return Panel(
       radius: radius,
-      blur: !nested,
-      fill: color,
-      tint: accent && !nested
-          ? [
-              scheme.primary.withValues(alpha: 0.22),
-              scheme.secondary.withValues(alpha: 0.10),
-            ]
-          : null,
-      glow: selected ? scheme.primary : null,
+      fill: color ??
+          (selected
+              ? Color.alphaBlend(
+                  scheme.primary.withValues(alpha: 0.08), AppColors.card)
+              : null),
+      borderColor: selected
+          ? scheme.primary
+          : accent
+              ? scheme.primary.withValues(alpha: 0.28)
+              : null,
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
-          borderRadius: BorderRadius.circular(radius),
           onTap: onTap,
-          hoverColor: Colors.white.withValues(alpha: 0.04),
+          hoverColor: Colors.white.withValues(alpha: 0.03),
           child: Padding(padding: padding, child: child),
         ),
       ),
@@ -281,7 +195,6 @@ class NeoCard extends StatelessWidget {
   }
 }
 
-/// Small mono badge.
 class Pill extends StatelessWidget {
   const Pill(this.text,
       {super.key, this.color = AppColors.gray300, this.icon});
@@ -296,8 +209,8 @@ class Pill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -306,7 +219,11 @@ class Pill extends StatelessWidget {
             Icon(icon, size: 13, color: color),
             const SizedBox(width: 4),
           ],
-          Text(text, style: mono(size: 11, color: color)),
+          Text(
+            text.toUpperCase(),
+            style: mono(size: 11, weight: FontWeight.w700, color: color)
+                .copyWith(letterSpacing: 0.4),
+          ),
         ],
       ),
     );
@@ -322,7 +239,7 @@ class SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text.toUpperCase(),
-      style: mono(size: 10, weight: FontWeight.w500, color: AppColors.gray400)
+      style: mono(size: 11, weight: FontWeight.w700, color: AppColors.gray300)
           .copyWith(letterSpacing: 1.2),
     );
   }
@@ -344,6 +261,53 @@ class SubTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    if (labels.length <= 4) {
+      // Segmented switcher: one panel, the active segment filled.
+      return Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.hairline),
+        ),
+        child: Row(
+          children: [
+            for (var i = 0; i < labels.length; i++)
+              Expanded(
+                child: Semantics(
+                  button: true,
+                  selected: i == index,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => onChanged(i),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: i == index ? primary : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        labels[i],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: i == index
+                              ? AppColors.canvas
+                              : AppColors.gray300,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -365,14 +329,6 @@ class SubTabs extends StatelessWidget {
                     border: Border.all(
                       color: i == index ? primary : AppColors.hairline,
                     ),
-                    boxShadow: i == index
-                        ? [
-                            BoxShadow(
-                              color: primary.withValues(alpha: 0.35),
-                              blurRadius: 14,
-                            ),
-                          ]
-                        : null,
                   ),
                   child: Text(
                     labels[i],
@@ -406,18 +362,12 @@ class GradientAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(colors: [scheme.primary, scheme.secondary]),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withValues(alpha: 0.35),
-            blurRadius: 14,
-          ),
-        ],
       ),
       child: CircleAvatar(
         backgroundColor: AppColors.card,
         child: Text(
           initial.toUpperCase(),
-          style: GoogleFonts.spaceGrotesk(
+          style: GoogleFonts.inter(
             fontWeight: FontWeight.w800,
             fontSize: size * 0.38,
             color: AppColors.text,
@@ -436,11 +386,15 @@ class ReadinessRing extends StatelessWidget {
     required this.color,
     this.size = 96,
     this.label,
+    this.caption,
   });
 
   final double value;
   final Color color;
   final double size;
+
+  /// Small text under the middle label (for example "READY").
+  final String? caption;
 
   /// Text in the middle. Shows the percentage when null.
   final String? label;
@@ -454,9 +408,23 @@ class ReadinessRing extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           CustomPaint(size: Size(size, size), painter: _RingPainter(value, color)),
-          Text(
-            label ?? '${(value * 100).round()}%',
-            style: mono(size: size * 0.22, weight: FontWeight.w700),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label ?? '${(value * 100).round()}%',
+                style: mono(size: size * 0.22, weight: FontWeight.w800),
+              ),
+              if (caption != null)
+                Text(
+                  caption!,
+                  style: mono(
+                    size: size * 0.095,
+                    weight: FontWeight.w600,
+                    color: AppColors.gray300,
+                  ).copyWith(letterSpacing: 1.1),
+                ),
+            ],
           ),
         ],
       ),
@@ -478,12 +446,17 @@ class _RingPainter extends CustomPainter {
     final track = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
-      ..color = AppColors.hairline;
+      ..color = AppColors.container;
     final arc = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
-      ..color = color;
+      ..shader = SweepGradient(
+        startAngle: -math.pi / 2,
+        endAngle: math.pi * 3 / 2,
+        colors: [AppColors.cyan, color],
+        transform: const GradientRotation(-math.pi / 2),
+      ).createShader(rect);
     canvas.drawArc(rect, 0, math.pi * 2, false, track);
     canvas.drawArc(rect, -math.pi / 2, math.pi * 2 * value, false, arc);
   }
@@ -512,19 +485,13 @@ class BrandMark extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [scheme.primary, scheme.secondary],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withValues(alpha: 0.35),
-            blurRadius: size / 2.5,
-          ),
-        ],
       ),
       child: Center(
         child: Text(
           'C',
-          style: GoogleFonts.spaceGrotesk(
+          style: GoogleFonts.inter(
             fontSize: size * 0.55,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w900,
             color: AppColors.canvas,
           ),
         ),

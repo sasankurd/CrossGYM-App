@@ -5,6 +5,7 @@ import '../../core/widgets.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../nutrition/calorie_summary.dart';
+import 'coach_sheet.dart';
 import '../workouts/workout_type_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -23,21 +24,38 @@ class DashboardScreen extends StatelessWidget {
     final maxCount = week.fold<int>(1, (m, c) => c > m ? c : m);
     final today = DateTime.now();
 
+    final streak = state.streakDays;
+
     return ListView(
-      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 120),
+      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 24),
       children: [
+        TabHeader(
+          kicker: 'CROSSGYM OS',
+          title: 'Command hub',
+          trailing: [
+            Pill('${streak}D streak',
+                color: AppColors.orange, icon: Icons.local_fire_department),
+            IconButton.filled(
+              onPressed: () => showCoachSheet(context),
+              tooltip: 'Coach',
+              icon: const Icon(Icons.auto_awesome, size: 18),
+            ),
+          ],
+        ),
         NeoCard(
           accent: true,
           child: Row(
             children: [
-              ReadinessRing(value: readiness, color: AppColors.emerald),
-              const SizedBox(width: 16),
+              ReadinessRing(
+                value: readiness,
+                color: scheme.primary,
+                caption: 'READY',
+              ),
+              const SizedBox(width: 18),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SectionLabel('CNS readiness'),
-                    const SizedBox(height: 4),
                     Text(
                       readiness >= 0.8
                           ? 'Ready to push'
@@ -46,11 +64,14 @@ class DashboardScreen extends StatelessWidget {
                               : 'Go easy or recover',
                       style: text.titleLarge,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
                       'Estimated from the sessions you log. Not a medical '
                       'measurement.',
-                      style: text.bodySmall?.copyWith(color: AppColors.gray400),
+                      style: text.bodySmall?.copyWith(
+                        color: AppColors.gray300,
+                        height: 1.35,
+                      ),
                     ),
                   ],
                 ),
@@ -58,8 +79,30 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        const SectionLabel('Quick launch session'),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _LaunchTile(
+                type: WorkoutType.gym,
+                title: 'Gym strength',
+                done: state.workoutsOf(WorkoutType.gym),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _LaunchTile(
+                type: WorkoutType.running,
+                title: 'Run',
+                done: state.workoutsOf(WorkoutType.running),
+              ),
+            ),
+          ],
+        ),
         if (state.profile != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           const CalorieCard(),
         ],
         const SizedBox(height: 12),
@@ -208,9 +251,13 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        const SectionLabel('Start a workout'),
+        const SectionLabel('More sessions'),
         const SizedBox(height: 10),
-        for (final type in WorkoutType.values) ...[
+        for (final type in const [
+          WorkoutType.crossfit,
+          WorkoutType.pilates,
+          WorkoutType.recovery,
+        ]) ...[
           _TypeTile(type: type, done: state.workoutsOf(type)),
           const SizedBox(height: 10),
         ],
@@ -298,6 +345,63 @@ class _TypeTile extends StatelessWidget {
           ),
           const Icon(Icons.chevron_right, color: AppColors.gray400),
         ],
+      ),
+    );
+  }
+}
+
+/// Large tile that opens a workout type, in the CrossGym OS launcher style.
+class _LaunchTile extends StatelessWidget {
+  const _LaunchTile({
+    required this.type,
+    required this.title,
+    required this.done,
+  });
+
+  final WorkoutType type;
+  final String title;
+  final int done;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = typeColor(context, type);
+    return Material(
+      color: AppColors.container,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: color.withValues(alpha: 0.35)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+              builder: (_) => WorkoutTypeScreen(type: type)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(type.icon, color: color, size: 22),
+              ),
+              const SizedBox(height: 12),
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 2),
+              Text(
+                '$done logged',
+                style: const TextStyle(fontSize: 12, color: AppColors.gray300),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

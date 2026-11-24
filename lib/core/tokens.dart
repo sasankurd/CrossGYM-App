@@ -1,31 +1,38 @@
 import 'package:flutter/material.dart';
 
-/// Fixed colors of the "Hybrid Neo-Tokyo" look. The accent pair (primary and
-/// secondary) is not fixed: it comes from the selected [AnimeTheme].
+/// Fixed colors of the "CrossGym OS" look: a near-black void, flat dark
+/// cards with a faint white edge, and four signal colors. The accent pair
+/// (primary and secondary) comes from the selected [AnimeTheme]; by default
+/// primary is volt (lime) and secondary is cyan.
 class AppColors {
   AppColors._();
 
-  static const Color canvas = Color(0xFF0D0B18);
-  static const Color header = Color(0xE6100E1D); // 90% opacity
-  static const Color card = Color(0xFF141228);
-  static const Color container = Color(0xFF121024);
-  static const Color input = Color(0xFF100E1D);
-  static const Color inputRaised = Color(0xFF16132B);
+  static const Color canvas = Color(0xFF06080D); // the void
+  static const Color header = Color(0xF006080D);
+  static const Color card = Color(0xFF0E131D); // surface card
+  static const Color container = Color(0xFF151C2B); // elevated surface
+  static const Color input = Color(0xFF151C2B);
+  static const Color inputRaised = Color(0xFF151C2B);
 
-  static const Color glassFill = Color(0x14FFFFFF); // white at 8%
-  static const Color sheet = Color(0xF0141228); // bottom sheets
+  static const Color glassFill = Color(0xFF151C2B); // nested tiles
+  static const Color sheet = Color(0xFF0E131D); // bottom sheets
 
-  static const Color emerald = Color(0xFF10B981); // readiness, completion
-  static const Color amber = Color(0xFFF59E0B); // CrossFit, PRs, stars
-  static const Color orange = Color(0xFFF97316); // streaks
-  static const Color rose = Color(0xFFF43F5E); // likes, delete
+  static const Color volt = Color(0xFFC8FF00); // primary action, gym
+  static const Color cyan = Color(0xFF00F0FF); // telemetry, running
+  static const Color coral = Color(0xFFFF3366); // heart rate, calories
+  static const Color violet = Color(0xFF8B5CF6); // marketplace
 
-  static const Color text = Color(0xFFF3F4F6);
-  static const Color gray300 = Color(0xFFD1D5DB);
-  static const Color gray400 = Color(0xFF9CA3AF);
+  static const Color emerald = volt; // readiness, completion
+  static const Color amber = Color(0xFFFFB020); // CrossFit, PRs, stars
+  static const Color orange = Color(0xFFFF7A1A); // streaks
+  static const Color rose = coral; // likes, delete, errors
 
-  static const Color hairline = Color(0x1AFFFFFF); // white at 10%
-  static const Color hairlineStrong = Color(0x33FFFFFF); // white at 20%
+  static const Color text = Color(0xFFF4F7FB);
+  static const Color gray300 = Color(0xFF8A95A5); // secondary text
+  static const Color gray400 = Color(0xFF6F7B8C); // muted text
+
+  static const Color hairline = Color(0x14FFFFFF); // white at 8%
+  static const Color hairlineStrong = Color(0x29FFFFFF); // white at 16%
 }
 
 /// A swappable primary and secondary accent pair.
@@ -41,6 +48,7 @@ class AnimeTheme {
 }
 
 const List<AnimeTheme> kAnimeThemes = [
+  AnimeTheme('Volt Cyan', Color(0xFFC8FF00), Color(0xFF00F0FF)),
   AnimeTheme('Sakura Voltage', Color(0xFFF04FAD), Color(0xFF00F0FF)),
   AnimeTheme('Naruto', Color(0xFFFF7A1A), Color(0xFF2F6BFF)),
   AnimeTheme('One Piece', Color(0xFFE63946), Color(0xFFFFC53D)),

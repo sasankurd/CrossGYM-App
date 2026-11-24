@@ -24,11 +24,12 @@ class _StoreScreenState extends State<StoreScreen> {
     final bought = state.purchasedPlans;
 
     return ListView(
-      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 120),
+      padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 24),
       children: [
-        Row(
-          children: [
-            Expanded(child: Text('Store', style: text.headlineSmall)),
+        TabHeader(
+          kicker: 'BUY AND SELL',
+          title: 'Plan market',
+          trailing: [
             FilledButton.icon(
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -40,7 +41,6 @@ class _StoreScreenState extends State<StoreScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
         SubTabs(
           labels: const ['Browse', 'My plans'],
           index: _tab,

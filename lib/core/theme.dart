@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'tokens.dart';
 
-/// Space Grotesk for headings, Inter for body, JetBrains Mono for numbers.
+/// Inter throughout: heavy and tightly tracked for headings, regular for body.
 ThemeData buildTheme(AnimeTheme t) {
   final scheme = ColorScheme.dark(
     primary: t.primary,
@@ -24,8 +24,7 @@ ThemeData buildTheme(AnimeTheme t) {
 
   TextStyle? grotesk(TextStyle? s, FontWeight w) => s == null
       ? null
-      : GoogleFonts.spaceGrotesk(
-          textStyle: s,
+      : s.copyWith(
           fontWeight: w,
           letterSpacing: (s.fontSize ?? 14) * -0.02,
         );
@@ -50,7 +49,7 @@ ThemeData buildTheme(AnimeTheme t) {
     useMaterial3: true,
     brightness: Brightness.dark,
     colorScheme: scheme,
-    scaffoldBackgroundColor: Colors.transparent,
+    scaffoldBackgroundColor: AppColors.canvas,
     canvasColor: AppColors.container,
     textTheme: text,
     appBarTheme: AppBarTheme(
@@ -64,7 +63,7 @@ ThemeData buildTheme(AnimeTheme t) {
       color: AppColors.card,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         side: const BorderSide(color: AppColors.hairline),
       ),
     ),

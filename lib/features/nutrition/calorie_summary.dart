@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
 
+import '../../core/shell_nav.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets.dart';
 import '../../data/app_state.dart';
 import '../../data/nutrition.dart';
 import 'add_food_sheet.dart';
 import 'nutrition_screen.dart';
+
+/// Opens the Fuel tab, or the tracker as its own page when there is no shell.
+void openFuel(BuildContext context) {
+  final nav = ShellNav.maybeOf(context);
+  if (nav != null) {
+    nav.go(ShellNav.fuel);
+  } else {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const NutritionScreen()),
+    );
+  }
+}
 
 /// Today's calories at a glance. Used on Home and at the top of the tracker.
 class CalorieCard extends StatelessWidget {
@@ -31,11 +44,7 @@ class CalorieCard extends StatelessWidget {
     final ringColor = over ? AppColors.amber : AppColors.emerald;
 
     return NeoCard(
-      onTap: openable
-          ? () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const NutritionScreen()),
-              )
-          : null,
+      onTap: openable ? () => openFuel(context) : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
