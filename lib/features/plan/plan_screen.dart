@@ -6,6 +6,7 @@ import '../../core/widgets.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
 import 'exercise_picker.dart';
+import 'program_picker.dart';
 
 class PlanScreen extends StatefulWidget {
   const PlanScreen({super.key});
@@ -28,11 +29,50 @@ class _PlanScreenState extends State<PlanScreen> {
     return ListView(
       padding: EdgeInsets.fromLTRB(16, contentTop(context), 16, 120),
       children: [
-        Text('Weekly plan', style: text.headlineSmall),
+        Text('Plan', style: text.headlineSmall),
         const SizedBox(height: 4),
         Text(
           'Tap the star on an exercise to open and edit its sets.',
           style: text.bodySmall?.copyWith(color: AppColors.gray400),
+        ),
+        const SizedBox(height: 16),
+        NeoCard(
+          accent: true,
+          radius: 20,
+          padding: const EdgeInsets.all(16),
+          onTap: () => showProgramPicker(context),
+          child: Row(
+            children: [
+              Icon(Icons.layers_outlined,
+                  color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionLabel('Active program'),
+                    const SizedBox(height: 2),
+                    Text(
+                      state.activeProgram.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.titleMedium,
+                    ),
+                    Text(
+                      '${state.activeProgram.exerciseCount} exercises - '
+                      '${state.activeProgram.trainingDays} days',
+                      style: mono(
+                        size: 11,
+                        weight: FontWeight.w500,
+                        color: AppColors.gray400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Pill('CHANGE', icon: Icons.swap_horiz),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
         Row(

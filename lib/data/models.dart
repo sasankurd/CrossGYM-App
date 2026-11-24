@@ -145,6 +145,20 @@ class PlannedExercise {
   bool open = false;
 }
 
+/// A named weekly training program: exercises for each day (0 = Monday).
+class Program {
+  Program({required this.id, required this.name, this.description = ''})
+      : days = {for (var i = 0; i < 7; i++) i: <PlannedExercise>[]};
+
+  final String id;
+  String name;
+  String description;
+  final Map<int, List<PlannedExercise>> days;
+
+  int get exerciseCount => days.values.fold(0, (sum, l) => sum + l.length);
+  int get trainingDays => days.values.where((l) => l.isNotEmpty).length;
+}
+
 enum AttachmentKind { plan, pr }
 
 class PostAttachment {

@@ -15,7 +15,7 @@ from Google Fonts at run time, so the first load needs internet.
 
 - Dashboard with an estimated readiness score, streak, 6 hour recovery window and a 7 day chart
 - Five workout types with an exercise library and animated drawings
-- Weekly plan: a 3 step exercise picker, and a star on each exercise to edit its sets
+- Plan: several named programs you can switch between (blank, template or from a store plan), a 3 step exercise picker, and a star on each exercise to edit its sets
 - Log workouts, earn XP and levels, 10 metal-tier medals
 - Social: feed with likes, posts with plan or PR attachments, follow, profiles
 - Store: browse, get free plans, publish your own plan with a price

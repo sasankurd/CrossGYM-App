@@ -71,3 +71,10 @@ List<String> subCategoriesFor(WorkoutType type) {
   }
   return subs;
 }
+
+Exercise? exerciseBySlug(String slug) {
+  for (final e in kExercises) {
+    if (e.slug == slug) return e;
+  }
+  return null;
+}

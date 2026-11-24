@@ -3,7 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../core/tokens.dart';
+import 'exercise_catalog.dart';
 import 'models.dart';
+import 'program_templates.dart';
 
 /// In-memory app state with seed data.
 ///
@@ -25,13 +27,13 @@ class AppState extends ChangeNotifier {
   final List<WorkoutLog> _logs = [];
   final List<Post> _posts = [];
   final Set<String> _likedPostIds = {};
-  final Map<int, List<PlannedExercise>> _plan = {
-    for (var i = 0; i < 7; i++) i: <PlannedExercise>[],
-  };
+  final List<Program> _programs = [];
+  String _activeProgramId = '';
   int _themeIndex = 0;
   int _nextPlanNumber = 100;
   int _nextPostNumber = 100;
   int _nextPlannedId = 1;
+  int _nextProgramNumber = 2;
 
   // ---- theme ---------------------------------------------------------------
 
@@ -268,18 +270,82 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ---- weekly plan ---------------------------------------------------------
+  // ---- programs and weekly plan --------------------------------------------
+
+  List<Program> get programs => List.unmodifiable(_programs);
+
+  Program get activeProgram =>
+      _programs.firstWhere((p) => p.id == _activeProgramId);
+
+  void selectProgram(String id) {
+    if (_programs.any((p) => p.id == id)) {
+      _activeProgramId = id;
+      notifyListeners();
+    }
+  }
+
+  /// Creates an empty program and makes it the active one.
+  void createProgram(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+    final p = Program(id: 'prog${_nextProgramNumber++}', name: trimmed);
+    _programs.add(p);
+    _activeProgramId = p.id;
+    notifyListeners();
+  }
+
+  void renameProgram(String id, String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+    for (final p in _programs) {
+      if (p.id == id) p.name = trimmed;
+    }
+    notifyListeners();
+  }
+
+  /// Deletes a program. The last remaining program cannot be deleted.
+  void deleteProgram(String id) {
+    if (_programs.length <= 1) return;
+    _programs.removeWhere((p) => p.id == id);
+    if (_activeProgramId == id) _activeProgramId = _programs.first.id;
+    notifyListeners();
+  }
+
+  /// Copies a template into a new program and makes it the active one.
+  void addProgramFromTemplate(ProgramTemplate t, {String? name}) {
+    final p = Program(
+      id: 'prog${_nextProgramNumber++}',
+      name: name ?? t.name,
+      description: t.description,
+    );
+    t.days.forEach((day, slugs) {
+      for (final slug in slugs) {
+        final e = exerciseBySlug(slug);
+        if (e != null) {
+          p.days[day]!.add(PlannedExercise(id: _nextPlannedId++, exercise: e));
+        }
+      }
+    });
+    _programs.add(p);
+    _activeProgramId = p.id;
+    notifyListeners();
+  }
+
+  /// Turns a store plan you own into a program, based on its workout type.
+  void addProgramFromPlan(Plan plan) =>
+      addProgramFromTemplate(templateForType(plan.type), name: plan.title);
 
   List<PlannedExercise> planFor(int day) =>
-      List.unmodifiable(_plan[day] ?? const <PlannedExercise>[]);
+      List.unmodifiable(activeProgram.days[day] ?? const <PlannedExercise>[]);
 
   void addToPlan(int day, Exercise e) {
-    _plan[day]!.add(PlannedExercise(id: _nextPlannedId++, exercise: e));
+    activeProgram.days[day]!
+        .add(PlannedExercise(id: _nextPlannedId++, exercise: e));
     notifyListeners();
   }
 
   void removeFromPlan(int day, PlannedExercise p) {
-    _plan[day]!.removeWhere((x) => x.id == p.id);
+    activeProgram.days[day]!.removeWhere((x) => x.id == p.id);
     notifyListeners();
   }
 
@@ -313,7 +379,7 @@ class AppState extends ChangeNotifier {
   /// Logs one session for the most common type in that day's plan.
   /// Returns that type, or null when the day is empty.
   WorkoutType? completeDay(int day) {
-    final items = _plan[day] ?? const <PlannedExercise>[];
+    final items = activeProgram.days[day] ?? const <PlannedExercise>[];
     if (items.isEmpty) return null;
     final counts = <WorkoutType, int>{};
     for (final p in items) {
@@ -394,6 +460,10 @@ class AppState extends ChangeNotifier {
       bio: 'Add a bio',
       city: '',
     );
+
+    final starter = Program(id: 'prog1', name: 'My Program');
+    _programs.add(starter);
+    _activeProgramId = starter.id;
 
     void addUser(AppUser u) => _users[u.id] = u;
     addUser(AppUser(

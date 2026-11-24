@@ -9,5 +9,11 @@ for slug in $(grep -oE "Exercise\('[a-z0-9-]+'" lib/data/exercise_catalog.dart |
     missing=1
   fi
 done
+# Every slug used by a program template must be in the exercise catalog.
+for slug in $(sed -n "/^const List<ProgramTemplate>/,\$p" lib/data/program_templates.dart | grep -oE "'[a-z]+(-[a-z]+)*'" | tr -d "'" | grep -vE "^t-"); do
+  if ! grep -q "Exercise('$slug'" lib/data/exercise_catalog.dart; then
+    case "$slug" in gym|running|crossfit|pilates|recovery) ;; *) echo "template uses unknown exercise: $slug"; missing=1 ;; esac
+  fi
+done
 if [ "$missing" -eq 0 ]; then echo "all exercise drawings present"; fi
 exit "$missing"
