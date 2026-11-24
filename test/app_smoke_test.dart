@@ -19,13 +19,19 @@ void main() {
         return;
       }
       errors.add(text);
+      // ignore: avoid_print
+      print('APPERR: ${text.length > 1500 ? text.substring(0, 1500) : text}');
     };
     addTearDown(() => FlutterError.onError = oldHandler);
 
     await tester.pumpWidget(const CrossGymApp());
+    // ignore: avoid_print
+    print('STEP first frame drawn');
     await tester.pump(const Duration(milliseconds: 500));
 
     Future<void> tap(String label) async {
+      // ignore: avoid_print
+      print('STEP tap $label');
       final f = find.text(label);
       await tester.ensureVisible(f.first);
       await tester.tap(f.first);
@@ -50,5 +56,5 @@ void main() {
     expect(find.text('Training studio'), findsOneWidget, reason: 'Train title');
 
     expect(errors, isEmpty, reason: errors.join('\n----\n'));
-  });
+  }, timeout: const Timeout(Duration(seconds: 90)));
 }
