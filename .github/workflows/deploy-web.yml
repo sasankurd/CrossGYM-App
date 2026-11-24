@@ -38,6 +38,9 @@ jobs:
       # Real errors fail the build. Style hints and deprecation notices do not.
       - run: flutter analyze --no-fatal-infos
 
+      - name: Unit tests
+        run: flutter test
+
       - name: Build web
         run: flutter build web --release
 

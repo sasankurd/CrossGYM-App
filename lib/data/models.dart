@@ -39,8 +39,8 @@ class AppUser {
   });
 
   final String id;
-  final String name;
-  final String handle;
+  String name;
+  String handle;
   final String bio;
   final String city;
 

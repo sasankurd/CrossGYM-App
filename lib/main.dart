@@ -1,29 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme.dart';
 import 'core/tokens.dart';
 import 'core/widgets.dart';
 import 'data/app_state.dart';
 import 'data/models.dart';
+import 'features/auth/auth_screen.dart';
 import 'features/home/dashboard_screen.dart';
+import 'features/onboarding/onboarding_screen.dart';
 import 'features/plan/plan_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/social/social_screen.dart';
 import 'features/store/store_screen.dart';
 import 'features/workouts/workout_type_screen.dart';
 
-void main() => runApp(const CrossGymApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences? prefs;
+  try {
+    prefs = await SharedPreferences.getInstance();
+  } on Object {
+    // Storage blocked (for example a private window): the app still runs,
+    // it just won't remember anything after a reload.
+    prefs = null;
+  }
+  runApp(CrossGymApp(prefs: prefs));
+}
 
 class CrossGymApp extends StatefulWidget {
-  const CrossGymApp({super.key});
+  const CrossGymApp({super.key, this.prefs});
+
+  final SharedPreferences? prefs;
 
   @override
   State<CrossGymApp> createState() => _CrossGymAppState();
 }
 
 class _CrossGymAppState extends State<CrossGymApp> {
-  final AppState _state = AppState();
+  late final AppState _state = AppState(prefs: widget.prefs);
 
   @override
   void dispose() {
@@ -50,11 +66,24 @@ class _CrossGymAppState extends State<CrossGymApp> {
               secondary: _state.theme.secondary,
               child: child ?? const SizedBox.shrink(),
             ),
-            home: const AppShell(),
+            home: const AuthGate(),
           );
         },
       ),
     );
+  }
+}
+
+/// Shows sign in, the first-run questions, or the app, depending on state.
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    if (!state.isSignedIn) return const AuthScreen();
+    if (state.needsOnboarding) return const OnboardingScreen();
+    return const AppShell();
   }
 }
 

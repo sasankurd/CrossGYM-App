@@ -4,6 +4,9 @@ import '../../core/tokens.dart';
 import '../../core/widgets.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
+import '../../data/nutrition.dart';
+import '../nutrition/nutrition_screen.dart';
+import '../onboarding/onboarding_screen.dart';
 import '../social/post_card.dart';
 import '../social/post_composer.dart';
 import 'about_screen.dart';
@@ -39,6 +42,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Metric('Sessions', '${state.totalWorkouts}'),
           ],
         ),
+        if (state.isGuest) ...[
+          const SizedBox(height: 12),
+          Text(
+            'You are using a guest account. Sign out and create an account to '
+            'keep it under your own name.',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: AppColors.gray400),
+          ),
+        ],
+        if (state.profile != null) ...[
+          const SizedBox(height: 12),
+          _GoalCard(profile: state.profile!),
+        ],
         const SizedBox(height: 16),
         SubTabs(
           labels: ['Posts', 'Medals $unlocked/${achievements.length}', 'Plans'],
@@ -58,6 +76,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             icon: const Icon(Icons.info_outline, size: 18),
             label: const Text('About and credits'),
+          ),
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: state.signOut,
+            icon: const Icon(Icons.logout, size: 18),
+            label: Text(state.isGuest ? 'Leave guest mode' : 'Sign out'),
           ),
         ),
       ],
@@ -216,6 +242,69 @@ class _MedalCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Calorie goal summary with links to the tracker and the questions.
+class _GoalCard extends StatelessWidget {
+  const _GoalCard({required this.profile});
+
+  final HealthProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return NeoCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(profile.goal.icon,
+                  color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text('Goal: ${profile.goal.label.toLowerCase()}',
+                    style: text.titleMedium),
+              ),
+              Text('${formatInt(profile.targetKcal)} cal/day',
+                  style: mono(size: 13)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${profile.age} years, ${profile.heightCm} cm, '
+            '${profile.weightKg.toStringAsFixed(1)} kg, '
+            '${profile.sessionsPerWeek} sessions a week.',
+            style: text.bodySmall?.copyWith(color: AppColors.gray400),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                        builder: (_) => const NutritionScreen()),
+                  ),
+                  child: const Text('Open tracker'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                        builder: (_) => const OnboardingScreen(edit: true)),
+                  ),
+                  child: const Text('Recalculate'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

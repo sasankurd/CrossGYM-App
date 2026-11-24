@@ -1,10 +1,14 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/tokens.dart';
+import 'accounts.dart';
 import 'exercise_catalog.dart';
 import 'models.dart';
+import 'nutrition.dart';
 import 'program_templates.dart';
 
 /// In-memory app state with seed data.
@@ -12,13 +16,16 @@ import 'program_templates.dart';
 /// Follow, messages, posts and the store are local only for now. Replace this
 /// class with repositories backed by a real service (see docs/BACKEND.md).
 class AppState extends ChangeNotifier {
-  AppState() {
+  AppState({SharedPreferences? prefs}) : _prefs = prefs {
+    _loadAccounts();
     _seed();
+    _restoreSession();
   }
 
   static const String meId = 'me';
 
-  late final AppUser me;
+  final SharedPreferences? _prefs;
+  late AppUser me;
   final Map<String, AppUser> _users = {};
   final List<Plan> _plans = [];
   final Set<String> _following = {};
@@ -34,6 +41,248 @@ class AppState extends ChangeNotifier {
   int _nextPostNumber = 100;
   int _nextPlannedId = 1;
   int _nextProgramNumber = 2;
+
+  // ---- accounts (demo: stored in this browser only) -------------------------
+
+  final List<AuthAccount> _accounts = [];
+  AuthAccount? _account;
+  HealthProfile? _profile;
+  final List<FoodEntry> _foods = [];
+
+  AuthAccount? get account => _account;
+  bool get isSignedIn => _account != null;
+  bool get isGuest => _account?.isGuest ?? false;
+  bool get needsOnboarding => isSignedIn && _profile == null;
+  HealthProfile? get profile => _profile;
+
+  void _loadAccounts() {
+    final raw = _prefs?.getString('accounts');
+    if (raw == null) return;
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      _accounts.addAll([
+        for (final j in list) AuthAccount.fromJson(j as Map<String, dynamic>),
+      ]);
+    } on Object {
+      _accounts.clear();
+    }
+  }
+
+  void _saveAccounts() => _prefs?.setString(
+        'accounts',
+        jsonEncode([for (final a in _accounts) a.toJson()]),
+      );
+
+  void _restoreSession() {
+    final id = _prefs?.getString('session');
+    if (id == null) return;
+    for (final a in _accounts) {
+      if (a.id == id) {
+        _activate(a);
+        return;
+      }
+    }
+  }
+
+  static String _handleFor(AuthAccount a) {
+    final base = a.email.isNotEmpty ? a.email.split('@').first : a.name;
+    final clean = base.toLowerCase().replaceAll(RegExp(r'[^a-z0-9._]'), '');
+    return clean.isEmpty ? a.provider : clean;
+  }
+
+  void _activate(AuthAccount a) {
+    _account = a;
+    _prefs?.setString('session', a.id);
+    me.name = a.name;
+    me.handle = _handleFor(a);
+    _profile = null;
+    _foods.clear();
+    final rawProfile = _prefs?.getString('profile:${a.id}');
+    if (rawProfile != null) {
+      try {
+        _profile = HealthProfile.fromJson(
+            jsonDecode(rawProfile) as Map<String, dynamic>);
+      } on Object {
+        _profile = null;
+      }
+    }
+    final rawFoods = _prefs?.getString('foods:${a.id}');
+    if (rawFoods != null) {
+      try {
+        _foods.addAll([
+          for (final j in jsonDecode(rawFoods) as List<dynamic>)
+            FoodEntry.fromJson(j as Map<String, dynamic>),
+        ]);
+      } on Object {
+        _foods.clear();
+      }
+    }
+    notifyListeners();
+  }
+
+  /// Returns an error message, or null when the account was created.
+  String? signUpWithEmail({
+    required String name,
+    required String email,
+    required String password,
+  }) {
+    final cleanName = name.trim();
+    final cleanEmail = email.trim().toLowerCase();
+    if (cleanName.isEmpty) return 'Enter your name.';
+    if (!looksLikeEmail(cleanEmail)) return 'Enter a valid email address.';
+    if (password.length < 8) return 'Use at least 8 characters for the password.';
+    if (_accounts.any((a) => a.provider == 'email' && a.email == cleanEmail)) {
+      return 'An account with this email already exists. Sign in instead.';
+    }
+    final salt = newSalt();
+    final account = AuthAccount(
+      id: 'email:$cleanEmail',
+      name: cleanName,
+      provider: 'email',
+      email: cleanEmail,
+      salt: salt,
+      hash: hashPassword(password, salt),
+    );
+    _accounts.add(account);
+    _saveAccounts();
+    _activate(account);
+    return null;
+  }
+
+  /// Returns an error message, or null when signed in.
+  String? signInWithEmail(String email, String password) {
+    final cleanEmail = email.trim().toLowerCase();
+    for (final a in _accounts) {
+      if (a.provider == 'email' &&
+          a.email == cleanEmail &&
+          a.hash == hashPassword(password, a.salt)) {
+        _activate(a);
+        return null;
+      }
+    }
+    return 'Email or password is incorrect.';
+  }
+
+  /// Simulated Apple, Google or Facebook sign-in. No real provider is called.
+  void signInDemo(String provider) {
+    final existing = _accounts.where((a) => a.id == provider);
+    if (existing.isNotEmpty) {
+      _activate(existing.first);
+      return;
+    }
+    final label = switch (provider) {
+      'apple' => 'Apple',
+      'google' => 'Google',
+      _ => 'Facebook',
+    };
+    final account =
+        AuthAccount(id: provider, name: '$label user', provider: provider);
+    _accounts.add(account);
+    _saveAccounts();
+    _activate(account);
+  }
+
+  void continueAsGuest() {
+    final existing = _accounts.where((a) => a.id == 'guest');
+    if (existing.isNotEmpty) {
+      _activate(existing.first);
+      return;
+    }
+    const guest = AuthAccount(id: 'guest', name: 'Guest', provider: 'guest');
+    _accounts.add(guest);
+    _saveAccounts();
+    _activate(guest);
+  }
+
+  void signOut() {
+    _account = null;
+    _profile = null;
+    _foods.clear();
+    _prefs?.remove('session');
+    _resetWorld();
+    notifyListeners();
+  }
+
+  /// Clears everything that belongs to the signed-in person.
+  void _resetWorld() {
+    _users.clear();
+    _plans.clear();
+    _following.clear();
+    _purchasedPlanIds.clear();
+    _chats.clear();
+    _logs.clear();
+    _posts.clear();
+    _likedPostIds.clear();
+    _programs.clear();
+    _activeProgramId = '';
+    _nextPlannedId = 1;
+    _nextProgramNumber = 2;
+    _seed();
+  }
+
+  void saveProfile(HealthProfile p) {
+    _profile = p;
+    final id = _account?.id;
+    if (id != null) _prefs?.setString('profile:$id', jsonEncode(p.toJson()));
+    notifyListeners();
+  }
+
+  // ---- calorie tracker -------------------------------------------------------
+
+  List<FoodEntry> foodsOn(DateTime day) {
+    final d = DateUtils.dateOnly(day);
+    final list = _foods.where((f) => DateUtils.dateOnly(f.at) == d).toList();
+    list.sort((a, b) => a.at.compareTo(b.at));
+    return list;
+  }
+
+  int caloriesOn(DateTime day) =>
+      foodsOn(day).fold(0, (sum, f) => sum + f.kcal);
+  double proteinOn(DateTime day) =>
+      foodsOn(day).fold(0.0, (sum, f) => sum + f.protein);
+  double carbsOn(DateTime day) =>
+      foodsOn(day).fold(0.0, (sum, f) => sum + f.carbs);
+  double fatOn(DateTime day) =>
+      foodsOn(day).fold(0.0, (sum, f) => sum + f.fat);
+
+  void _saveFoods() {
+    final id = _account?.id;
+    if (id == null) return;
+    _prefs?.setString(
+        'foods:$id', jsonEncode([for (final f in _foods) f.toJson()]));
+  }
+
+  void addFood({
+    required String name,
+    required int kcal,
+    required Meal meal,
+    double protein = 0,
+    double carbs = 0,
+    double fat = 0,
+    DateTime? at,
+  }) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty || kcal <= 0) return;
+    final when = at ?? DateTime.now();
+    _foods.add(FoodEntry(
+      id: 'f${when.microsecondsSinceEpoch}-${_foods.length}',
+      name: trimmed,
+      kcal: kcal,
+      protein: protein,
+      carbs: carbs,
+      fat: fat,
+      meal: meal,
+      at: when,
+    ));
+    _saveFoods();
+    notifyListeners();
+  }
+
+  void removeFood(String id) {
+    _foods.removeWhere((f) => f.id == id);
+    _saveFoods();
+    notifyListeners();
+  }
 
   // ---- theme ---------------------------------------------------------------
 
@@ -123,9 +372,12 @@ class AppState extends ChangeNotifier {
   /// The workout type trained least over the last 7 days.
   WorkoutType get leastTrainedType {
     final cutoff = DateTime.now().subtract(const Duration(days: 7));
-    var best = WorkoutType.values.first;
+    final pool = (_profile?.types.isNotEmpty ?? false)
+        ? WorkoutType.values.where(_profile!.types.contains).toList()
+        : WorkoutType.values;
+    var best = pool.first;
     var fewest = 1 << 30;
-    for (final t in WorkoutType.values) {
+    for (final t in pool) {
       final count =
           _logs.where((l) => l.type == t && l.at.isAfter(cutoff)).length;
       if (count < fewest) {

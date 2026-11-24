@@ -4,6 +4,7 @@ import '../../core/tokens.dart';
 import '../../core/widgets.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
+import '../nutrition/calorie_summary.dart';
 import '../workouts/workout_type_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -57,6 +58,10 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
         ),
+        if (state.profile != null) ...[
+          const SizedBox(height: 12),
+          const CalorieCard(),
+        ],
         const SizedBox(height: 12),
         Row(
           children: [

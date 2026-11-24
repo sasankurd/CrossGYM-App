@@ -435,11 +435,15 @@ class ReadinessRing extends StatelessWidget {
     required this.value,
     required this.color,
     this.size = 96,
+    this.label,
   });
 
   final double value;
   final Color color;
   final double size;
+
+  /// Text in the middle. Shows the percentage when null.
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -451,7 +455,7 @@ class ReadinessRing extends StatelessWidget {
         children: [
           CustomPaint(size: Size(size, size), painter: _RingPainter(value, color)),
           Text(
-            '${(value * 100).round()}%',
+            label ?? '${(value * 100).round()}%',
             style: mono(size: size * 0.22, weight: FontWeight.w700),
           ),
         ],
@@ -487,4 +491,44 @@ class _RingPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _RingPainter old) =>
       old.value != value || old.color != color;
+}
+
+/// The CrossGYM logo tile: a gradient square with a "C".
+class BrandMark extends StatelessWidget {
+  const BrandMark({super.key, this.size = 36});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(size / 3),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [scheme.primary, scheme.secondary],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.primary.withValues(alpha: 0.35),
+            blurRadius: size / 2.5,
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          'C',
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: size * 0.55,
+            fontWeight: FontWeight.w800,
+            color: AppColors.canvas,
+          ),
+        ),
+      ),
+    );
+  }
 }
