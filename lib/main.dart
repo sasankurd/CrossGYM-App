@@ -155,10 +155,10 @@ class _NavBar extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               for (var i = 0; i < _items.length; i++)
-                Semantics(
+                Expanded(
+                  child: Semantics(
                   button: true,
                   selected: i == index,
                   label: _items[i].$2,
@@ -168,8 +168,9 @@ class _NavBar extends StatelessWidget {
                     onTap: () => onSelect(i),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 220),
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
+                          horizontal: 4, vertical: 8),
                       decoration: BoxDecoration(
                         color: i == index
                             ? primary.withValues(alpha: 0.12)
@@ -202,6 +203,7 @@ class _NavBar extends StatelessWidget {
                         ],
                       ),
                     ),
+                  ),
                   ),
                 ),
             ],
