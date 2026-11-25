@@ -113,6 +113,20 @@ class AppState extends ChangeNotifier {
         _profile = null;
       }
     }
+    _logs.clear();
+    final rawLogs = _prefs?.getString('logs:${a.id}');
+    if (rawLogs != null) {
+      try {
+        _logs.addAll([
+          for (final j in jsonDecode(rawLogs) as List<dynamic>)
+            WorkoutLog.fromJson(j as Map<String, dynamic>),
+        ]);
+        _logs.sort((x, y) => x.at.compareTo(y.at));
+        me.workouts = _logs.length;
+      } on Object {
+        _logs.clear();
+      }
+    }
     final rawFoods = _prefs?.getString('foods:${a.id}');
     if (rawFoods != null) {
       try {
@@ -662,9 +676,43 @@ class AppState extends ChangeNotifier {
   // ---- actions -------------------------------------------------------------
 
   void logWorkout(WorkoutType type) {
-    _logs.add(WorkoutLog(type, DateTime.now()));
+    final now = DateTime.now();
+    _logs.add(WorkoutLog(type, now, id: 'w${now.microsecondsSinceEpoch}'));
     me.workouts = totalWorkouts;
+    _saveLogs();
     notifyListeners();
+  }
+
+  // ---- records ---------------------------------------------------------------
+
+  /// Every logged workout, newest first.
+  List<WorkoutLog> get records => _logs.reversed.toList();
+
+  /// Adds a finished workout (a recorded or imported run, for example).
+  void addRecord(WorkoutLog log) {
+    _logs.add(log);
+    _logs.sort((a, b) => a.at.compareTo(b.at));
+    me.workouts = totalWorkouts;
+    _saveLogs();
+    notifyListeners();
+  }
+
+  /// Removes a workout and returns it so the caller can offer Undo.
+  WorkoutLog? removeRecord(String id) {
+    final i = _logs.indexWhere((l) => l.id == id);
+    if (i < 0) return null;
+    final removed = _logs.removeAt(i);
+    me.workouts = totalWorkouts;
+    _saveLogs();
+    notifyListeners();
+    return removed;
+  }
+
+  void _saveLogs() {
+    final id = _account?.id;
+    if (id == null) return;
+    _prefs?.setString(
+        'logs:$id', jsonEncode([for (final l in _logs) l.toJson()]));
   }
 
   void toggleFollow(String userId) {

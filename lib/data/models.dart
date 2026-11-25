@@ -86,12 +86,79 @@ class ChatMessage {
   final DateTime sentAt;
 }
 
-/// One logged workout session.
+/// A point on a map, in degrees.
+class GeoPoint {
+  const GeoPoint(this.lat, this.lon);
+
+  final double lat;
+  final double lon;
+
+  /// Stored as [lat, lon] rounded to 5 decimals (about one meter).
+  List<double> toJson() => [_round5(lat), _round5(lon)];
+
+  factory GeoPoint.fromJson(List<dynamic> j) =>
+      GeoPoint((j[0] as num).toDouble(), (j[1] as num).toDouble());
+
+  static double _round5(double v) => (v * 100000).round() / 100000;
+}
+
+/// One logged workout. Only [type] and [at] are always known; runs recorded
+/// with GPS or imported from a watch also carry distance, time and a route.
 class WorkoutLog {
-  const WorkoutLog(this.type, this.at);
+  const WorkoutLog(
+    this.type,
+    this.at, {
+    this.id = '',
+    this.title,
+    this.durationSec,
+    this.distanceM,
+    this.avgHr,
+    this.route = const <GeoPoint>[],
+    this.source = 'logged',
+  });
 
   final WorkoutType type;
   final DateTime at;
+  final String id;
+  final String? title;
+  final int? durationSec;
+  final double? distanceM;
+  final int? avgHr;
+  final List<GeoPoint> route;
+
+  /// logged (tapped Log workout), plan (finished a plan day), gps (recorded
+  /// in the app) or watch (imported from a watch file).
+  final String source;
+
+  String get displayTitle => title ?? '${type.label} workout';
+  bool get hasRoute => route.length >= 2;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type.name,
+        'at': at.toIso8601String(),
+        if (title != null) 'title': title,
+        if (durationSec != null) 'dur': durationSec,
+        if (distanceM != null) 'dist': distanceM,
+        if (avgHr != null) 'hr': avgHr,
+        if (route.isNotEmpty) 'route': [for (final p in route) p.toJson()],
+        'src': source,
+      };
+
+  factory WorkoutLog.fromJson(Map<String, dynamic> j) => WorkoutLog(
+        WorkoutType.values.byName(j['type'] as String),
+        DateTime.parse(j['at'] as String),
+        id: (j['id'] as String?) ?? '',
+        title: j['title'] as String?,
+        durationSec: (j['dur'] as num?)?.toInt(),
+        distanceM: (j['dist'] as num?)?.toDouble(),
+        avgHr: (j['hr'] as num?)?.toInt(),
+        route: [
+          for (final p in (j['route'] as List<dynamic>? ?? const []))
+            GeoPoint.fromJson(p as List<dynamic>),
+        ],
+        source: (j['src'] as String?) ?? 'logged',
+      );
 }
 
 enum MedalTier {

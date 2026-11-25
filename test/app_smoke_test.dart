@@ -8,6 +8,9 @@ import 'package:crossgym/features/nutrition/nutrition_screen.dart';
 import 'package:crossgym/features/onboarding/onboarding_screen.dart';
 import 'package:crossgym/features/plan/plan_screen.dart';
 import 'package:crossgym/features/community/community_tab.dart';
+import 'package:crossgym/features/records/records_screen.dart';
+import 'package:crossgym/features/records/record_detail_screen.dart';
+import 'package:crossgym/features/records/run_recorder_screen.dart';
 import 'package:crossgym/features/profile/connections_screen.dart';
 import 'package:crossgym/features/profile/profile_screen.dart';
 import 'package:crossgym/features/profile/settings_screen.dart';
@@ -19,7 +22,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// Draws one screen at phone size and fails on any framework error.
 /// Google Fonts cannot download in the test sandbox, so those are ignored.
 void screenTest(String name, Widget Function() build,
-    {String? expectText, bool signedIn = true}) {
+    {String? expectText, bool signedIn = true, void Function(AppState)? setup}) {
   testWidgets(name, (tester) async {
     tester.view.physicalSize = const Size(390 * 2, 844 * 2);
     tester.view.devicePixelRatio = 2;
@@ -52,6 +55,7 @@ void screenTest(String name, Widget Function() build,
         goal: Goal.maintain,
       ));
     }
+    if (setup != null) setup(state);
     addTearDown(state.dispose);
 
     await tester.pumpWidget(AppScope(
@@ -87,6 +91,30 @@ void main() {
   screenTest('first-run questions', () => const OnboardingScreen(),
       expectText: 'About you');
   screenTest('Hub', () => const DashboardScreen(), expectText: 'Command hub');
+  void sample(AppState st) {
+    st.addRecord(WorkoutLog(WorkoutType.running, DateTime.now(),
+        id: 'r1', title: 'Run', durationSec: 1800, distanceM: 5000, avgHr: 150));
+    st.addRecord(WorkoutLog(WorkoutType.gym,
+        DateTime.now().subtract(const Duration(days: 40)), id: 'g1'));
+  }
+
+  screenTest('Hub with records', () => const DashboardScreen(),
+      expectText: 'Command hub', setup: sample);
+  screenTest('Records list', () => const RecordsScreen(),
+      expectText: 'Records', setup: sample);
+  screenTest('Records empty', () => const RecordsScreen(),
+      expectText: 'No workouts yet');
+  screenTest('Records running tab',
+      () => const RecordsScreen(initialType: WorkoutType.running),
+      expectText: 'Record a run', setup: sample);
+  screenTest(
+      'Record detail',
+      () => RecordDetailScreen(
+          log: WorkoutLog(WorkoutType.running, DateTime(2026, 11, 20),
+              id: 'r2', title: 'Run', durationSec: 1800, distanceM: 5000)),
+      expectText: 'Delete workout');
+  screenTest('Run recorder', () => const RunRecorderScreen(),
+      expectText: 'Record a run');
   screenTest('Train', () => const PlanScreen(), expectText: 'Training studio');
   screenTest('Fuel', () => const NutritionScreen(embedded: true),
       expectText: 'Precision fuel');

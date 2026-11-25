@@ -6,6 +6,7 @@ import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../nutrition/calorie_summary.dart';
 import '../watch/heart_widgets.dart';
+import '../records/records_section.dart';
 import 'coach_sheet.dart';
 import '../workouts/workout_type_screen.dart';
 
@@ -249,6 +250,8 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 20),
+        const RecordsSection(),
         const SizedBox(height: 20),
         const SectionLabel('More sessions'),
         const SizedBox(height: 10),
