@@ -219,10 +219,14 @@ class Pill extends StatelessWidget {
             Icon(icon, size: 13, color: color),
             const SizedBox(width: 4),
           ],
-          Text(
-            text.toUpperCase(),
-            style: mono(size: 11, weight: FontWeight.w700, color: color)
-                .copyWith(letterSpacing: 0.4),
+          Flexible(
+            child: Text(
+              text.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: mono(size: 11, weight: FontWeight.w700, color: color)
+                  .copyWith(letterSpacing: 0.4),
+            ),
           ),
         ],
       ),

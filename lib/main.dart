@@ -148,7 +148,10 @@ class _NavBar extends StatelessWidget {
         color: AppColors.header,
         border: Border(top: BorderSide(color: AppColors.hairline)),
       ),
+      // heightFactor 1: shrink to the bar's height. A plain Center would grow
+      // to fill the whole screen and cover the pages.
       child: Center(
+        heightFactor: 1,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: Row(
