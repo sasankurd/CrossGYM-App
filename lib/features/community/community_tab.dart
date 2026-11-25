@@ -16,10 +16,10 @@ class CommunityTab extends StatelessWidget {
     final Widget page = switch (item) {
       'profile' => Scaffold(
           appBar: AppBar(title: const Text('Profile')),
-          body: const Center(
+          body: Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 720),
-              child: ProfileScreen(),
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: const ProfileScreen(),
             ),
           ),
         ),
