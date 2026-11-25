@@ -61,6 +61,11 @@ void screenTest(String name, Widget Function() build,
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 100));
 
+    if (name == 'app shell with tabs') {
+      final size = tester.getSize(find.byType(DashboardScreen));
+      expect(size.height, greaterThan(400), reason: 'Hub page height');
+      expect(size.width, greaterThan(300), reason: 'Hub page width');
+    }
     if (expectText != null) {
       expect(find.text(expectText), findsOneWidget, reason: 'title text');
     }
@@ -84,5 +89,7 @@ void main() {
       expectText: 'Precision fuel');
   screenTest('Market', () => const StoreScreen(), expectText: 'Plan market');
   screenTest('Athlete', () => const AthleteTab());
+  screenTest('app shell with tabs', () => const AppShell(),
+      expectText: 'Command hub');
   screenTest('whole app', () => const CrossGymApp(), expectText: 'Create your account');
 }

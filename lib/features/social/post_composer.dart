@@ -104,6 +104,12 @@ class _PostComposerState extends State<PostComposer> {
           const SizedBox(height: 10),
           Row(
             children: [
+              Expanded(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
               PopupMenuButton<Plan>(
                 tooltip: 'Attach a plan',
                 enabled: plans.isNotEmpty,
@@ -122,12 +128,14 @@ class _PostComposerState extends State<PostComposer> {
                   icon: Icons.storefront,
                 ),
               ),
-              const SizedBox(width: 8),
               GestureDetector(
                 onTap: _attachPr,
                 child: const Pill('PR', color: AppColors.amber, icon: Icons.emoji_events),
               ),
-              const Spacer(),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
               FilledButton(onPressed: _post, child: const Text('Post')),
             ],
           ),
