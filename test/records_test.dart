@@ -1,3 +1,4 @@
+import 'package:crossgym/data/export/route_scene.dart';
 import 'package:crossgym/data/format.dart';
 import 'package:crossgym/data/geo.dart';
 import 'package:crossgym/data/gps/gps_source.dart';
@@ -168,5 +169,29 @@ void main() {
                 start: DateTime(2026, 11, 10), end: DateTime(2026, 11, 10)),
             now: now)),
         ['b']);
+  });
+
+  test('scene fits points inside the picture and reveals by progress', () {
+    const route = [
+      GeoPoint(36.19, 44.01),
+      GeoPoint(36.195, 44.012),
+      GeoPoint(36.20, 44.01),
+      GeoPoint(36.205, 44.008),
+    ];
+    final scene = RouteScene(route);
+    final all = scene.flat(720, 100, 1);
+    expect(all.length, 4);
+    for (final (x, y) in all) {
+      expect(x, inInclusiveRange(99, 621));
+      expect(y, inInclusiveRange(99, 621));
+    }
+    expect(scene.flat(720, 100, 0.5).length, 2);
+    final t = scene.tilted(720, 90, 1, yaw: 1.2);
+    expect(t.base.length, 4);
+    for (var i = 0; i < 4; i++) {
+      expect(t.top[i].$2, lessThan(t.base[i].$2)); // wall rises up the screen
+      expect(t.top[i].$1, t.base[i].$1);
+    }
+    expect(RouteScene(const []).flat(720, 100, 1), isEmpty);
   });
 }

@@ -11,6 +11,7 @@ import 'package:crossgym/features/community/community_tab.dart';
 import 'package:crossgym/features/records/records_screen.dart';
 import 'package:crossgym/features/records/record_detail_screen.dart';
 import 'package:crossgym/features/records/run_recorder_screen.dart';
+import 'package:crossgym/features/records/route_export_screen.dart';
 import 'package:crossgym/features/profile/connections_screen.dart';
 import 'package:crossgym/features/profile/profile_screen.dart';
 import 'package:crossgym/features/profile/settings_screen.dart';
@@ -113,6 +114,20 @@ void main() {
           log: WorkoutLog(WorkoutType.running, DateTime(2026, 11, 20),
               id: 'r2', title: 'Run', durationSec: 1800, distanceM: 5000)),
       expectText: 'Delete workout');
+  screenTest(
+      'Route export',
+      () => RouteExportScreen(
+          log: WorkoutLog(WorkoutType.running, DateTime(2026, 11, 20),
+              id: 'r3',
+              title: 'Run',
+              durationSec: 1800,
+              distanceM: 1112,
+              route: const [
+                GeoPoint(36.19, 44.01),
+                GeoPoint(36.195, 44.012),
+                GeoPoint(36.2, 44.01),
+              ])),
+      expectText: 'Export run');
   screenTest('Run recorder', () => const RunRecorderScreen(),
       expectText: 'Record a run');
   screenTest('Train', () => const PlanScreen(), expectText: 'Training studio');

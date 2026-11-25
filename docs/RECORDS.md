@@ -21,3 +21,17 @@ by type (running, gym, CrossFit, Pilates, recovery) and by date (all time,
 Workouts are saved per account in this browser (`logs:<account id>`). Routes
 are thinned to at most 300 points to keep storage small. Clearing site data
 removes them until there is a server (see BACKEND.md).
+
+## Export and share
+Open a run that has a route, then "Export as 2D or 3D video".
+- The video is drawn by the app on a hidden canvas (a plain background grid,
+  the route, title and stats) and recorded with the browser's MediaRecorder.
+  It does not include the OpenStreetMap pictures: browsers block recording
+  pictures from another site.
+- 2D is a top-down view where the route draws itself. 3D is a tilted view that
+  slowly turns; the height of the wall is for looks, not real elevation.
+- Share video opens the phone's share sheet with the file when the browser
+  supports sharing files, otherwise the file is saved. Chrome and Edge make
+  WebM; some iPhone apps cannot open WebM.
+- "Share summary as text" shares or copies a one-line summary.
+- Recording takes about 9 seconds in real time and the page must stay open.

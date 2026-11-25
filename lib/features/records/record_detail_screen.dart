@@ -5,6 +5,7 @@ import '../../core/widgets.dart';
 import '../../data/app_state.dart';
 import '../../data/format.dart';
 import '../../data/models.dart';
+import 'route_export_screen.dart';
 import 'route_map.dart';
 
 /// One workout in full: numbers, map (if it has a route) and delete.
@@ -77,6 +78,14 @@ class RecordDetailScreen extends StatelessWidget {
             if (log.hasRoute) ...[
               const SizedBox(height: 14),
               RouteMap(route: log.route, height: 280),
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                        builder: (_) => RouteExportScreen(log: log))),
+                icon: const Icon(Icons.movie_creation_outlined),
+                label: const Text('Export as 2D or 3D video'),
+              ),
             ],
             const SizedBox(height: 14),
             Text(sourceText,
