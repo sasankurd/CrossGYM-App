@@ -7,7 +7,10 @@ import 'package:crossgym/features/home/dashboard_screen.dart';
 import 'package:crossgym/features/nutrition/nutrition_screen.dart';
 import 'package:crossgym/features/onboarding/onboarding_screen.dart';
 import 'package:crossgym/features/plan/plan_screen.dart';
-import 'package:crossgym/features/profile/athlete_tab.dart';
+import 'package:crossgym/features/community/community_tab.dart';
+import 'package:crossgym/features/profile/connections_screen.dart';
+import 'package:crossgym/features/profile/profile_screen.dart';
+import 'package:crossgym/features/profile/settings_screen.dart';
 import 'package:crossgym/features/store/store_screen.dart';
 import 'package:crossgym/main.dart';
 import 'package:flutter/material.dart';
@@ -88,7 +91,12 @@ void main() {
   screenTest('Fuel', () => const NutritionScreen(embedded: true),
       expectText: 'Precision fuel');
   screenTest('Market', () => const StoreScreen(), expectText: 'Plan market');
-  screenTest('Athlete', () => const AthleteTab());
+  screenTest('Community', () => const CommunityTab(),
+      expectText: 'Community');
+  screenTest('Profile', () => const ProfileScreen());
+  screenTest('Settings', () => const SettingsScreen(), expectText: 'Settings');
+  screenTest('Connections', () => const ConnectionsScreen(),
+      expectText: 'Connections');
   screenTest('app shell with tabs', () => const AppShell(),
       expectText: 'Command hub');
   screenTest('whole app', () => const CrossGymApp(), expectText: 'Create your account');

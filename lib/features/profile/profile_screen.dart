@@ -81,7 +81,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Align(
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
-            onPressed: state.signOut,
+            onPressed: () {
+              Navigator.of(context).popUntil((r) => r.isFirst);
+              state.signOut();
+            },
             icon: const Icon(Icons.logout, size: 18),
             label: Text(state.isGuest ? 'Leave guest mode' : 'Sign out'),
           ),

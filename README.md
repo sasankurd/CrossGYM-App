@@ -9,9 +9,10 @@ and direct messages.
 "CrossGym OS" look: a near-black background (#06080D), flat dark cards with a
 faint white edge, volt (lime) and cyan accents, coral for calories, violet for
 the market. Inter throughout, heavy and tightly spaced for titles. Five tabs
-in a flat bottom bar: Hub, Train, Fuel, Market, Athlete. The palette icon in
-the Athlete tab switches to other colour themes. Fonts load from Google Fonts
-at run time, so the first load needs internet.
+in a flat bottom bar: Hub, Train, Fuel, Market, Community.
+The three-dot menu in the Community tab opens Profile, Settings (account, colour
+themes, body details, sign out) and Connections (watch). Fonts load from Google
+Fonts at run time, so the first load needs internet.
 
 ## What works now
 

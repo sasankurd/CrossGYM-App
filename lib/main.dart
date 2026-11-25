@@ -11,7 +11,7 @@ import 'features/home/dashboard_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/plan/plan_screen.dart';
 import 'features/nutrition/nutrition_screen.dart';
-import 'features/profile/athlete_tab.dart';
+import 'features/community/community_tab.dart';
 import 'features/store/store_screen.dart';
 
 Future<void> main() async {
@@ -97,7 +97,7 @@ class _AppShellState extends State<AppShell> {
     PlanScreen(),
     NutritionScreen(embedded: true),
     StoreScreen(),
-    AthleteTab(),
+    CommunityTab(),
   ];
 
   void _go(int i) => setState(() => _index = i);
@@ -135,7 +135,7 @@ class _NavBar extends StatelessWidget {
     (Icons.bolt_rounded, 'Train'),
     (Icons.local_fire_department_rounded, 'Fuel'),
     (Icons.storefront_rounded, 'Market'),
-    (Icons.person_rounded, 'Athlete'),
+    (Icons.groups_rounded, 'Community'),
   ];
 
   @override
@@ -168,9 +168,9 @@ class _NavBar extends StatelessWidget {
                     onTap: () => onSelect(i),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 220),
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 4, vertical: 8),
+                          horizontal: 2, vertical: 8),
                       decoration: BoxDecoration(
                         color: i == index
                             ? primary.withValues(alpha: 0.12)
@@ -193,6 +193,9 @@ class _NavBar extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             _items[i].$2,
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight:
