@@ -5,6 +5,7 @@ import 'package:crossgym/data/gps/gps_source.dart';
 import 'package:crossgym/data/gps/run_recorder.dart';
 import 'package:crossgym/data/gpx.dart';
 import 'package:crossgym/data/models.dart';
+import 'package:crossgym/data/recovery.dart';
 import 'package:crossgym/features/records/records_widgets.dart';
 import 'package:flutter/material.dart' show DateTimeRange;
 import 'package:flutter_test/flutter_test.dart';
@@ -193,5 +194,27 @@ void main() {
       expect(t.top[i].$1, t.base[i].$1);
     }
     expect(RouteScene(const []).flat(720, 100, 1), isEmpty);
+  });
+
+  test('recovery drops after a session and returns with time', () {
+    final now = DateTime(2026, 11, 26, 12);
+    final run = WorkoutLog(
+        WorkoutType.running, now.subtract(const Duration(hours: 2)),
+        id: 'a', distanceM: 10000);
+    final fresh = muscleRecovery(const [], now);
+    expect(fresh.values.every((v) => v == 1), isTrue);
+    final after = muscleRecovery([run], now);
+    expect(after[Muscle.calves]!, lessThan(0.5));
+    expect(after[Muscle.chest], 1);
+    final later = muscleRecovery([run], now.add(const Duration(hours: 40)));
+    expect(later[Muscle.calves], 1);
+    final rest = muscleRecovery([
+      WorkoutLog(WorkoutType.recovery, now.subtract(const Duration(hours: 1)),
+          id: 'b')
+    ], now);
+    expect(rest[Muscle.quads], 1);
+    expect(RecoveryState.of(0.9), RecoveryState.fresh);
+    expect(RecoveryState.of(0.6), RecoveryState.recovering);
+    expect(RecoveryState.of(0.2), RecoveryState.tired);
   });
 }

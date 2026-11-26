@@ -5,6 +5,7 @@ import '../../core/widgets.dart';
 import '../../data/app_state.dart';
 import '../../data/nutrition.dart';
 import 'add_food_sheet.dart';
+import 'calorie_charts.dart';
 import 'calorie_summary.dart';
 
 /// The calorie tracker: one day at a time, grouped by meal.
@@ -102,6 +103,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
           label: const Text('Add food'),
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
         ),
+        const SizedBox(height: 16),
+        WeekCalorieChart(day: _day),
+        const SizedBox(height: 12),
+        MacroDonut(day: _day),
         const SizedBox(height: 16),
         if (foods.isEmpty)
           NeoCard(
