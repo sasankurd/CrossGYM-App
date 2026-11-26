@@ -1,9 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../../core/tokens.dart';
 import '../../core/widgets.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
+import '../profile/photo_picker.dart';
 import 'post_card.dart';
 
 /// Write a post and optionally attach one of your plans or a personal record.
@@ -17,6 +20,7 @@ class PostComposer extends StatefulWidget {
 class _PostComposerState extends State<PostComposer> {
   final _controller = TextEditingController();
   PostAttachment? _attachment;
+  Uint8List? _image;
 
   @override
   void dispose() {
@@ -71,10 +75,18 @@ class _PostComposerState extends State<PostComposer> {
     }
   }
 
+  Future<void> _addPhoto() async {
+    final png = await pickPhoto(context, square: false);
+    if (png != null && mounted) setState(() => _image = png);
+  }
+
   void _post() {
-    AppScope.of(context).addPost(_controller.text, _attachment);
+    AppScope.of(context).addPost(_controller.text, _attachment, image: _image);
     _controller.clear();
-    setState(() => _attachment = null);
+    setState(() {
+      _attachment = null;
+      _image = null;
+    });
   }
 
   @override
@@ -99,6 +111,24 @@ class _PostComposerState extends State<PostComposer> {
             AttachmentCard(
               attachment: _attachment!,
               onRemove: () => setState(() => _attachment = null),
+            ),
+          ],
+          if (_image != null) ...[
+            const SizedBox(height: 10),
+            Stack(
+              alignment: Alignment.topRight,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.memory(_image!,
+                      width: double.infinity, height: 180, fit: BoxFit.cover),
+                ),
+                IconButton.filled(
+                  tooltip: 'Remove photo',
+                  onPressed: () => setState(() => _image = null),
+                  icon: const Icon(Icons.close, size: 18),
+                ),
+              ],
             ),
           ],
           const SizedBox(height: 10),
@@ -127,6 +157,10 @@ class _PostComposerState extends State<PostComposer> {
                   color: Theme.of(context).colorScheme.secondary,
                   icon: Icons.storefront,
                 ),
+              ),
+              GestureDetector(
+                onTap: _addPhoto,
+                child: const Pill('PHOTO', color: AppColors.cyan, icon: Icons.photo_outlined),
               ),
               GestureDetector(
                 onTap: _attachPr,

@@ -37,6 +37,8 @@ class UserProfileScreen extends StatelessWidget {
             handle: user.handle,
             bio: user.bio,
             subtitle: user.city,
+            photo: user.photo,
+            rank: state.rankOf(userId),
             metrics: [
               Metric('Followers', '${user.followers}'),
               Metric('Sessions', '${user.workouts}'),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'photo_picker.dart';
+
 import '../../core/tokens.dart';
 import '../../core/widgets.dart';
 import '../../data/app_state.dart';
@@ -29,9 +31,10 @@ class SettingsScreen extends StatelessWidget {
               NeoCard(
                 child: Row(
                   children: [
-                    GradientAvatar(
-                      initial: state.me.name.isEmpty ? '?' : state.me.name[0],
-                      size: 48,
+                    UserAvatar(
+                      name: state.me.name,
+                      photo: state.me.photo,
+                      size: 52,
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -50,6 +53,10 @@ class SettingsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
+                    ),
+                    TextButton(
+                      onPressed: () => editProfilePhoto(context),
+                      child: Text(state.me.photo == null ? 'Add photo' : 'Change'),
                     ),
                   ],
                 ),

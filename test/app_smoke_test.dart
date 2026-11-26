@@ -8,6 +8,7 @@ import 'package:crossgym/features/nutrition/nutrition_screen.dart';
 import 'package:crossgym/features/onboarding/onboarding_screen.dart';
 import 'package:crossgym/features/plan/plan_screen.dart';
 import 'package:crossgym/features/community/community_tab.dart';
+import 'package:crossgym/features/rank/rank_widgets.dart';
 import 'package:crossgym/features/records/records_screen.dart';
 import 'package:crossgym/features/records/record_detail_screen.dart';
 import 'package:crossgym/features/records/run_recorder_screen.dart';
@@ -130,6 +131,11 @@ void main() {
       expectText: 'Export run');
   screenTest('Run recorder', () => const RunRecorderScreen(),
       expectText: 'Record a run');
+  screenTest('Achievements', () => const AchievementsScreen(),
+      expectText: 'Achievements', setup: sample);
+  screenTest('Leaderboard',
+      () => const Scaffold(body: SingleChildScrollView(child: LeaderboardView())),
+      expectText: 'Ranking', setup: sample);
   screenTest('Train', () => const PlanScreen(), expectText: 'Training studio');
   screenTest('Fuel', () => const NutritionScreen(embedded: true),
       expectText: 'Precision fuel');

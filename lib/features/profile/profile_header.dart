@@ -1,7 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../../core/tokens.dart';
 import '../../core/widgets.dart';
+import '../../data/rank.dart';
+import '../rank/rank_widgets.dart';
 
 class Metric {
   const Metric(this.label, this.value);
@@ -20,6 +24,9 @@ class ProfileHeaderCard extends StatelessWidget {
     required this.metrics,
     this.subtitle = '',
     this.actions,
+    this.photo,
+    this.rank,
+    this.onPhotoTap,
   });
 
   final String name;
@@ -28,6 +35,11 @@ class ProfileHeaderCard extends StatelessWidget {
   final String subtitle;
   final List<Metric> metrics;
   final Widget? actions;
+  final Uint8List? photo;
+  final RankTier? rank;
+
+  /// When set, the picture is tappable (used on your own profile).
+  final VoidCallback? onPhotoTap;
 
   @override
   Widget build(BuildContext context) {
@@ -40,13 +52,39 @@ class ProfileHeaderCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              GradientAvatar(initial: name[0], size: 72),
+              Semantics(
+                button: onPhotoTap != null,
+                label: onPhotoTap != null ? 'Change profile picture' : null,
+                child: GestureDetector(
+                  onTap: onPhotoTap,
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      UserAvatar(name: name, photo: photo, size: 76),
+                      if (onPhotoTap != null)
+                        Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: const BoxDecoration(
+                            color: AppColors.container,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.photo_camera_outlined,
+                              size: 14, color: AppColors.text),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(name, style: text.headlineSmall),
+                    if (rank != null) ...[
+                      const SizedBox(height: 4),
+                      RankPill(rank!),
+                    ],
                     Text(
                       '@$handle',
                       style: mono(

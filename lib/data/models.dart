@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 enum WorkoutType {
@@ -36,6 +39,8 @@ class AppUser {
     required this.city,
     this.followers = 0,
     this.workouts = 0,
+    this.seedPoints = 0,
+    this.photo,
   });
 
   final String id;
@@ -47,6 +52,12 @@ class AppUser {
   /// Followers shown on the profile (seed value for other users).
   int followers;
   int workouts;
+
+  /// Achievement points of a demo user (yours are computed from your medals).
+  final int seedPoints;
+
+  /// Profile picture (a small PNG), or null to show the initial.
+  Uint8List? photo;
 }
 
 class Plan {
@@ -162,13 +173,16 @@ class WorkoutLog {
 }
 
 enum MedalTier {
-  bronze('Bronze'),
-  silver('Silver'),
-  gold('Gold'),
-  diamond('Diamond');
+  bronze('Bronze', 10),
+  silver('Silver', 25),
+  gold('Gold', 50),
+  diamond('Diamond', 100);
 
-  const MedalTier(this.label);
+  const MedalTier(this.label, this.points);
   final String label;
+
+  /// Achievement points earned for unlocking a medal of this tier.
+  final int points;
 }
 
 class Achievement {
@@ -188,6 +202,7 @@ class Achievement {
   final int progress;
   final MedalTier tier;
 
+  int get points => tier.points;
   bool get unlocked => progress >= goal;
   double get fraction => progress >= goal ? 1.0 : progress / goal;
 }
@@ -238,6 +253,15 @@ class PostAttachment {
   final AttachmentKind kind;
   final String title;
   final String detail;
+
+  Map<String, dynamic> toJson() =>
+      {'kind': kind.name, 'title': title, 'detail': detail};
+
+  factory PostAttachment.fromJson(Map<String, dynamic> j) => PostAttachment(
+        kind: AttachmentKind.values.byName(j['kind'] as String),
+        title: j['title'] as String,
+        detail: j['detail'] as String,
+      );
 }
 
 class Post {
@@ -248,6 +272,7 @@ class Post {
     required this.createdAt,
     this.attachment,
     this.baseLikes = 0,
+    this.image,
   });
 
   final String id;
@@ -256,4 +281,60 @@ class Post {
   final DateTime createdAt;
   final PostAttachment? attachment;
   final int baseLikes;
+
+  /// An attached photo (a small PNG).
+  final Uint8List? image;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'author': authorId,
+        'text': text,
+        'at': createdAt.toIso8601String(),
+        if (attachment != null) 'att': attachment!.toJson(),
+        if (image != null) 'img': base64Encode(image!),
+      };
+
+  factory Post.fromJson(Map<String, dynamic> j) => Post(
+        id: j['id'] as String,
+        authorId: j['author'] as String,
+        text: j['text'] as String,
+        createdAt: DateTime.parse(j['at'] as String),
+        attachment: j['att'] == null
+            ? null
+            : PostAttachment.fromJson(j['att'] as Map<String, dynamic>),
+        image: j['img'] == null ? null : base64Decode(j['img'] as String),
+      );
+}
+
+/// A comment under a post.
+class Comment {
+  const Comment({
+    required this.id,
+    required this.postId,
+    required this.authorId,
+    required this.text,
+    required this.at,
+  });
+
+  final String id;
+  final String postId;
+  final String authorId;
+  final String text;
+  final DateTime at;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'post': postId,
+        'author': authorId,
+        'text': text,
+        'at': at.toIso8601String(),
+      };
+
+  factory Comment.fromJson(Map<String, dynamic> j) => Comment(
+        id: j['id'] as String,
+        postId: j['post'] as String,
+        authorId: j['author'] as String,
+        text: j['text'] as String,
+        at: DateTime.parse(j['at'] as String),
+      );
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'photo_picker.dart';
+
 import '../../core/tokens.dart';
 import '../../core/widgets.dart';
 import '../../data/app_state.dart';
@@ -36,6 +38,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           handle: state.me.handle,
           bio: state.me.bio,
           subtitle: 'Level ${state.level}',
+          photo: state.me.photo,
+          rank: state.rank,
+          onPhotoTap: () => editProfilePhoto(context),
           metrics: [
             Metric('Followers', '${state.me.followers}'),
             Metric('Following', '${state.followingCount}'),

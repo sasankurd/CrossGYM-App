@@ -7,6 +7,7 @@ import '../../data/models.dart';
 import '../nutrition/calorie_summary.dart';
 import '../watch/heart_widgets.dart';
 import '../records/records_section.dart';
+import '../rank/rank_widgets.dart';
 import 'recovery_map.dart';
 import 'coach_sheet.dart';
 import '../workouts/workout_type_screen.dart';
@@ -251,6 +252,10 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 20),
+        const SectionLabel('Rank and achievements'),
+        const SizedBox(height: 10),
+        const RankCard(),
         const SizedBox(height: 20),
         const SectionLabel('Recovery map'),
         const SizedBox(height: 10),

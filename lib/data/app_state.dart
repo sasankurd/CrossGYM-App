@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +11,7 @@ import 'exercise_catalog.dart';
 import 'models.dart';
 import 'nutrition.dart';
 import 'program_templates.dart';
+import 'rank.dart';
 import 'watch/heart_rate.dart';
 import 'watch/watch_link.dart';
 
@@ -41,6 +43,9 @@ class AppState extends ChangeNotifier {
   final List<WorkoutLog> _logs = [];
   final List<Post> _posts = [];
   final Set<String> _likedPostIds = {};
+  final Map<String, List<Comment>> _comments = {};
+  final Set<String> _seenMedals = {};
+  int _nextCommentNumber = 1;
   final List<Program> _programs = [];
   String _activeProgramId = '';
   int _themeIndex = 0;
@@ -138,7 +143,69 @@ class AppState extends ChangeNotifier {
         _foods.clear();
       }
     }
+    _loadSocial(a.id);
     notifyListeners();
+  }
+
+  /// Loads this account's photo, posts, comments and seen medals.
+  void _loadSocial(String id) {
+    me.photo = null;
+    _posts.removeWhere((p) => p.authorId == meId);
+    for (final list in _comments.values) {
+      list.removeWhere((c) => c.authorId == meId);
+    }
+    final photo = _prefs?.getString('photo:$id');
+    if (photo != null) {
+      try {
+        me.photo = base64Decode(photo);
+      } on Object {
+        me.photo = null;
+      }
+    }
+    final rawPosts = _prefs?.getString('posts:$id');
+    if (rawPosts != null) {
+      try {
+        for (final j in jsonDecode(rawPosts) as List<dynamic>) {
+          _posts.add(Post.fromJson(j as Map<String, dynamic>));
+        }
+      } on Object {
+        _posts.removeWhere((p) => p.authorId == meId);
+      }
+    }
+    final rawComments = _prefs?.getString('comments:$id');
+    if (rawComments != null) {
+      try {
+        for (final j in jsonDecode(rawComments) as List<dynamic>) {
+          final c = Comment.fromJson(j as Map<String, dynamic>);
+          _comments.putIfAbsent(c.postId, () => []).add(c);
+        }
+      } on Object {
+        // Ignore unreadable comments.
+      }
+    }
+    final rawLikes = _prefs?.getString('likes:$id');
+    _likedPostIds.clear();
+    if (rawLikes != null) {
+      try {
+        _likedPostIds.addAll((jsonDecode(rawLikes) as List<dynamic>).cast<String>());
+      } on Object {
+        _likedPostIds.clear();
+      }
+    }
+    _seenMedals.clear();
+    final rawSeen = _prefs?.getString('seen:$id');
+    if (rawSeen != null) {
+      try {
+        _seenMedals.addAll((jsonDecode(rawSeen) as List<dynamic>).cast<String>());
+      } on Object {
+        _seenMedals.clear();
+      }
+    } else {
+      // First time on this account: do not announce medals already earned.
+      _seenMedals.addAll(
+          [for (final a in achievements) if (a.unlocked) a.title]);
+      _saveSeen();
+    }
   }
 
   /// Returns an error message, or null when the account was created.
@@ -235,6 +302,8 @@ class AppState extends ChangeNotifier {
     _logs.clear();
     _posts.clear();
     _likedPostIds.clear();
+    _comments.clear();
+    _seenMedals.clear();
     _programs.clear();
     _activeProgramId = '';
     _nextPlannedId = 1;
@@ -416,88 +485,63 @@ class AppState extends ChangeNotifier {
     return best;
   }
 
-  List<Achievement> get achievements => [
+  /// Total distance of recorded and imported runs, in kilometers.
+  double get totalKm =>
+      _logs.fold<double>(0, (n, l) => n + (l.distanceM ?? 0)) / 1000;
+
+  /// How many different days you logged food on.
+  int get foodDaysLogged =>
+      _foods.map((f) => DateUtils.dateOnly(f.at)).toSet().length;
+
+  int get mappedRuns => _logs.where((l) => l.hasRoute).length;
+
+  List<Achievement> get achievements {
+    Achievement a(String title, String description, IconData icon, int goal,
+            int progress, MedalTier tier) =>
         Achievement(
-          title: 'First step',
-          description: 'Log your first workout',
-          icon: Icons.flag,
-          goal: 1,
-          progress: totalWorkouts,
-          tier: MedalTier.bronze,
-        ),
-        Achievement(
-          title: 'Getting serious',
-          description: 'Log 10 workouts',
-          icon: Icons.local_fire_department,
-          goal: 10,
-          progress: totalWorkouts,
-          tier: MedalTier.silver,
-        ),
-        Achievement(
-          title: 'Machine',
-          description: 'Log 50 workouts',
-          icon: Icons.military_tech,
-          goal: 50,
-          progress: totalWorkouts,
-          tier: MedalTier.gold,
-        ),
-        Achievement(
-          title: 'Legend',
-          description: 'Log 200 workouts',
-          icon: Icons.diamond,
-          goal: 200,
-          progress: totalWorkouts,
-          tier: MedalTier.diamond,
-        ),
-        Achievement(
-          title: 'On a roll',
-          description: 'Train 7 days in a row',
-          icon: Icons.calendar_month,
-          goal: 7,
-          progress: streakDays,
-          tier: MedalTier.silver,
-        ),
-        Achievement(
-          title: 'Road runner',
-          description: 'Log 5 running workouts',
-          icon: Icons.directions_run,
-          goal: 5,
-          progress: workoutsOf(WorkoutType.running),
-          tier: MedalTier.bronze,
-        ),
-        Achievement(
-          title: 'Box regular',
-          description: 'Log 5 CrossFit workouts',
-          icon: Icons.bolt,
-          goal: 5,
-          progress: workoutsOf(WorkoutType.crossfit),
-          tier: MedalTier.silver,
-        ),
-        Achievement(
-          title: 'Well rounded',
-          description: 'Try all five workout types',
-          icon: Icons.donut_large,
-          goal: WorkoutType.values.length,
-          progress: WorkoutType.values.where((t) => workoutsOf(t) > 0).length,
-          tier: MedalTier.gold,
-        ),
-        Achievement(
-          title: 'Social',
-          description: 'Follow 3 people',
-          icon: Icons.group,
-          goal: 3,
-          progress: _following.length,
-          tier: MedalTier.bronze,
-        ),
-        Achievement(
-          title: 'Coach',
-          description: 'Publish a plan in the store',
-          icon: Icons.storefront,
-          goal: 1,
-          progress: myPlans.length,
-          tier: MedalTier.silver,
-        ),
-      ];
+          title: title,
+          description: description,
+          icon: icon,
+          goal: goal,
+          progress: progress,
+          tier: tier,
+        );
+    final w = totalWorkouts;
+    return [
+      // Workouts
+      a('First step', 'Log your first workout', Icons.flag, 1, w, MedalTier.bronze),
+      a('Getting serious', 'Log 10 workouts', Icons.local_fire_department, 10, w, MedalTier.silver),
+      a('Machine', 'Log 50 workouts', Icons.military_tech, 50, w, MedalTier.gold),
+      a('Century', 'Log 100 workouts', Icons.looks_one, 100, w, MedalTier.gold),
+      a('Legend', 'Log 200 workouts', Icons.diamond, 200, w, MedalTier.diamond),
+      // Consistency
+      a('On a roll', 'Train 7 days in a row', Icons.calendar_month, 7, streakDays, MedalTier.silver),
+      a('Unstoppable', 'Train 30 days in a row', Icons.event_available, 30, streakDays, MedalTier.gold),
+      // Training types
+      a('Road runner', 'Log 5 running workouts', Icons.directions_run, 5, workoutsOf(WorkoutType.running), MedalTier.bronze),
+      a('Iron regular', 'Log 5 gym workouts', Icons.fitness_center, 5, workoutsOf(WorkoutType.gym), MedalTier.bronze),
+      a('Box regular', 'Log 5 CrossFit workouts', Icons.bolt, 5, workoutsOf(WorkoutType.crossfit), MedalTier.silver),
+      a('Core strength', 'Log 5 Pilates workouts', Icons.self_improvement, 5, workoutsOf(WorkoutType.pilates), MedalTier.bronze),
+      a('Recovery habit', 'Log 5 recovery sessions', Icons.spa, 5, workoutsOf(WorkoutType.recovery), MedalTier.bronze),
+      a('Well rounded', 'Try all five workout types', Icons.donut_large, WorkoutType.values.length,
+          WorkoutType.values.where((t) => workoutsOf(t) > 0).length, MedalTier.gold),
+      // Distance and maps
+      a('Mapped', 'Save a run with a map', Icons.map, 1, mappedRuns, MedalTier.bronze),
+      a('First 5 km', 'Run 5 km in total', Icons.route, 5, totalKm.floor(), MedalTier.bronze),
+      a('Marathon total', 'Run 42 km in total', Icons.timeline, 42, totalKm.floor(), MedalTier.silver),
+      a('Hundred club', 'Run 100 km in total', Icons.landscape, 100, totalKm.floor(), MedalTier.gold),
+      a('Around the block x500', 'Run 500 km in total', Icons.public, 500, totalKm.floor(), MedalTier.diamond),
+      // Fuel
+      a('Fuel logger', 'Log food on 3 different days', Icons.restaurant, 3, foodDaysLogged, MedalTier.bronze),
+      a('Consistent eater', 'Log food on 14 different days', Icons.restaurant_menu, 14, foodDaysLogged, MedalTier.silver),
+      // Community
+      a('Face of the app', 'Add a profile picture', Icons.account_circle, 1, me.photo == null ? 0 : 1, MedalTier.bronze),
+      a('First post', 'Share your first post', Icons.edit, 1, myPostCount, MedalTier.bronze),
+      a('Social', 'Follow 3 people', Icons.group, 3, _following.length, MedalTier.bronze),
+      a('Conversation starter', 'Write 5 comments', Icons.chat_bubble, 5, myCommentCount, MedalTier.bronze),
+      a('Coach', 'Publish a plan in the store', Icons.storefront, 1, myPlans.length, MedalTier.silver),
+    ];
+  }
 
   // ---- messages ------------------------------------------------------------
 
@@ -528,26 +572,148 @@ class AppState extends ChangeNotifier {
 
   void toggleLike(Post p) {
     if (!_likedPostIds.remove(p.id)) _likedPostIds.add(p.id);
+    final id = _account?.id;
+    if (id != null) _prefs?.setString('likes:$id', jsonEncode(_likedPostIds.toList()));
     notifyListeners();
   }
 
-  void addPost(String text, PostAttachment? attachment) {
+  /// Posts from the people you follow, newest first.
+  List<Post> get followingFeed =>
+      feed.where((p) => p.authorId == meId || _following.contains(p.authorId)).toList();
+
+  void addPost(String text, PostAttachment? attachment, {Uint8List? image}) {
     final trimmed = text.trim();
-    if (trimmed.isEmpty && attachment == null) return;
+    if (trimmed.isEmpty && attachment == null && image == null) return;
     _posts.add(Post(
-      id: 'post${_nextPostNumber++}',
+      id: 'post${DateTime.now().microsecondsSinceEpoch}-${_nextPostNumber++}',
       authorId: meId,
       text: trimmed,
       createdAt: DateTime.now(),
       attachment: attachment,
+      image: image,
     ));
+    _saveMyPosts();
     notifyListeners();
   }
 
   void deletePost(Post p) {
     if (p.authorId != meId) return;
     _posts.removeWhere((x) => x.id == p.id);
+    _comments.remove(p.id);
+    _saveMyPosts();
+    _saveMyComments();
     notifyListeners();
+  }
+
+  int get myPostCount => _posts.where((p) => p.authorId == meId).length;
+
+  void _saveMyPosts() {
+    final id = _account?.id;
+    if (id == null) return;
+    _prefs?.setString('posts:$id',
+        jsonEncode([for (final p in _posts) if (p.authorId == meId) p.toJson()]));
+  }
+
+  // ---- comments ---------------------------------------------------------------
+
+  List<Comment> commentsOf(Post p) {
+    final list = [...(_comments[p.id] ?? const <Comment>[])];
+    list.sort((a, b) => a.at.compareTo(b.at));
+    return list;
+  }
+
+  int get myCommentCount => _comments.values
+      .fold(0, (n, l) => n + l.where((c) => c.authorId == meId).length);
+
+  void addComment(Post p, String text) {
+    final t = text.trim();
+    if (t.isEmpty) return;
+    _comments.putIfAbsent(p.id, () => []).add(Comment(
+          id: 'c${DateTime.now().microsecondsSinceEpoch}-${_nextCommentNumber++}',
+          postId: p.id,
+          authorId: meId,
+          text: t,
+          at: DateTime.now(),
+        ));
+    _saveMyComments();
+    notifyListeners();
+  }
+
+  void deleteComment(Comment c) {
+    if (c.authorId != meId) return;
+    _comments[c.postId]?.removeWhere((x) => x.id == c.id);
+    _saveMyComments();
+    notifyListeners();
+  }
+
+  void _saveMyComments() {
+    final id = _account?.id;
+    if (id == null) return;
+    _prefs?.setString(
+        'comments:$id',
+        jsonEncode([
+          for (final l in _comments.values)
+            for (final c in l)
+              if (c.authorId == meId) c.toJson(),
+        ]));
+  }
+
+  // ---- profile photo -----------------------------------------------------------
+
+  /// Sets (or with null removes) your profile picture. [png] should already be
+  /// small, see shrinkImage.
+  void setMyPhoto(Uint8List? png) {
+    me.photo = png;
+    final id = _account?.id;
+    if (id != null) {
+      if (png == null) {
+        _prefs?.remove('photo:$id');
+      } else {
+        _prefs?.setString('photo:$id', base64Encode(png));
+      }
+    }
+    notifyListeners();
+  }
+
+  // ---- rank and leaderboard ----------------------------------------------------
+
+  /// Points from every medal you have unlocked.
+  int get achievementPoints =>
+      achievements.where((a) => a.unlocked).fold(0, (n, a) => n + a.points);
+
+  RankTier get rank => RankTier.forPoints(achievementPoints);
+
+  /// Rank of any user: yours is computed, demo users use their seed points.
+  RankTier rankOf(String userId) => userId == meId
+      ? rank
+      : RankTier.forPoints(_users[userId]?.seedPoints ?? 0);
+
+  int pointsOf(String userId) =>
+      userId == meId ? achievementPoints : (_users[userId]?.seedPoints ?? 0);
+
+  /// Everyone ordered by points, highest first.
+  List<AppUser> get leaderboard {
+    final all = [me, ..._users.values];
+    all.sort((a, b) => pointsOf(b.id).compareTo(pointsOf(a.id)));
+    return all;
+  }
+
+  /// Medals unlocked since the last call (used for the "unlocked" message).
+  List<Achievement> takeNewMedals() {
+    if (!isSignedIn) return const [];
+    final fresh = [
+      for (final a in achievements)
+        if (a.unlocked && !_seenMedals.contains(a.title)) a,
+    ];
+    if (fresh.isEmpty) return const [];
+    _seenMedals.addAll([for (final a in fresh) a.title]);
+    _saveSeen();
+    return fresh;
+  }
+
+  void _saveSeen() {
+    final id = _account?.id;
+    if (id != null) _prefs?.setString('seen:$id', jsonEncode(_seenMedals.toList()));
   }
 
   // ---- programs and weekly plan --------------------------------------------
@@ -788,6 +954,7 @@ class AppState extends ChangeNotifier {
       city: 'Erbil',
       followers: 1240,
       workouts: 312,
+      seedPoints: 410,
     ));
     addUser(AppUser(
       id: 'u2',
@@ -797,6 +964,7 @@ class AppState extends ChangeNotifier {
       city: 'Sulaimaniyah',
       followers: 860,
       workouts: 540,
+      seedPoints: 520,
     ));
     addUser(AppUser(
       id: 'u3',
@@ -806,6 +974,7 @@ class AppState extends ChangeNotifier {
       city: 'Duhok',
       followers: 2100,
       workouts: 275,
+      seedPoints: 250,
     ));
     addUser(AppUser(
       id: 'u4',
@@ -815,6 +984,7 @@ class AppState extends ChangeNotifier {
       city: 'Kirkuk',
       followers: 530,
       workouts: 410,
+      seedPoints: 330,
     ));
 
     _plans.addAll(const [
@@ -912,6 +1082,25 @@ class AppState extends ChangeNotifier {
         baseLikes: 63,
       ),
     ]);
+
+    _comments['post1'] = [
+      Comment(
+        id: 'sc1',
+        postId: 'post1',
+        authorId: 'u4',
+        text: 'Huge. What was your top set before?',
+        at: now.subtract(const Duration(hours: 1, minutes: 30)),
+      ),
+    ];
+    _comments['post3'] = [
+      Comment(
+        id: 'sc2',
+        postId: 'post3',
+        authorId: 'u1',
+        text: 'Easy pace is where the gains are.',
+        at: now.subtract(const Duration(hours: 20)),
+      ),
+    ];
 
     _chats['u1'] = [
       ChatMessage(

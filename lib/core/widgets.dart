@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' show FontFeature;
 
 import 'package:flutter/material.dart';
@@ -375,6 +376,49 @@ class GradientAvatar extends StatelessWidget {
             fontWeight: FontWeight.w800,
             fontSize: size * 0.38,
             color: AppColors.text,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A profile picture, or the gradient initial when there is none.
+class UserAvatar extends StatelessWidget {
+  const UserAvatar({
+    super.key,
+    required this.name,
+    this.photo,
+    this.size = 48,
+  });
+
+  final String name;
+  final Uint8List? photo;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = name.isEmpty ? '?' : name[0];
+    final bytes = photo;
+    if (bytes == null) return GradientAvatar(initial: initial, size: size);
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      label: 'Profile picture of $name',
+      child: Container(
+        width: size,
+        height: size,
+        padding: const EdgeInsets.all(2.5),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(colors: [scheme.primary, scheme.secondary]),
+        ),
+        child: ClipOval(
+          child: Image.memory(
+            bytes,
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+            errorBuilder: (_, __, ___) =>
+                GradientAvatar(initial: initial, size: size),
           ),
         ),
       ),

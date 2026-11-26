@@ -91,6 +91,38 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _index = 0;
+  AppState? _state;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final s = AppScope.of(context);
+    if (!identical(s, _state)) {
+      _state?.removeListener(_announce);
+      _state = s..addListener(_announce);
+    }
+  }
+
+  @override
+  void dispose() {
+    _state?.removeListener(_announce);
+    super.dispose();
+  }
+
+  /// Shows a message when a new medal is unlocked.
+  void _announce() {
+    final fresh = _state?.takeNewMedals() ?? const [];
+    if (fresh.isEmpty || !mounted) return;
+    final points = fresh.fold(0, (n, a) => n + a.points);
+    final names = fresh.map((a) => a.title).join(', ');
+    // Wait for the current frame so nothing is shown while the tree builds.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Medal unlocked: $names (+$points points)'),
+      ));
+    });
+  }
 
   static const _pages = <Widget>[
     DashboardScreen(),
