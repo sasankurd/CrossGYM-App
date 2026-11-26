@@ -42,7 +42,7 @@ Future<RouteVideo> renderRouteVideo(RouteVideoSpec spec) async {
   if (!canRenderVideo) {
     throw UnsupportedError('This browser cannot record video.');
   }
-  final mime = _mimes.firstWhere(_Recorder.isTypeSupported);
+  final mime = _mimes.firstWhere((m) => _Recorder.isTypeSupported(m));
   final doc = globalContext.getProperty<JSObject>('document'.toJS);
   final canvas =
       doc.callMethodVarArgs<JSObject>('createElement'.toJS, ['canvas'.toJS]);
