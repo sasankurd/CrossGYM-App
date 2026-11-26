@@ -28,3 +28,17 @@ All of it is licensed under
 
 None to the drawings. Each file keeps GymMane's format: one SVG path per line,
 one line per pose.
+
+## Body diagram (lib/data/body_paths.dart)
+
+The male front and back muscle outlines are from
+[MuscleMap](https://github.com/melihcolpan/MuscleMap) by Melih Colpan, MIT
+License (Copyright (c) 2026 Melih Colpan), taken from the converted path data in
+[openGym](https://github.com/DuarteSantos8/openGym) `frontend/src/lib/body-paths.js`.
+Only the outlines were used; openGym's exercise photos and animations are
+licensed by Gym visual and are NOT used in this app.
+
+MIT License: permission is granted, free of charge, to use, copy, modify,
+merge, publish, distribute, sublicense and sell copies of the software, provided
+the copyright notice and this permission notice are included in all copies. The
+software is provided "as is", without warranty of any kind.

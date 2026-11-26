@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:path_drawing/path_drawing.dart';
 
 import '../../core/tokens.dart';
 import '../../core/widgets.dart';
 import '../../data/app_state.dart';
+import '../../data/body_paths.dart';
 import '../../data/recovery.dart';
 
 const _fresh = Color(0xFF2DD4BF);
@@ -55,8 +57,8 @@ class _RecoveryMapState extends State<RecoveryMap> {
               Semantics(
                 label: 'Body diagram. $summary',
                 child: SizedBox(
-                  width: 140,
-                  height: 294,
+                  width: 150,
+                  height: 264,
                   child: CustomPaint(painter: _BodyPainter(rec, _side == 1)),
                 ),
               ),
@@ -126,62 +128,73 @@ class _BodyPainter extends CustomPainter {
   final Map<Muscle, double> rec;
   final bool back;
 
-  // Drawn in a 200 x 420 box and scaled to fit.
-  static RRect _r(double l, double t, double r, double b, [double rad = 12]) =>
-      RRect.fromLTRBR(l, t, r, b, Radius.circular(rad));
+  /// Which drawn part belongs to which muscle group. Parts not listed here
+  /// (head, neck, hands, feet, knees, ankles) are drawn plain.
+  static const _front = <String, Muscle>{
+    'chest': Muscle.chest,
+    'deltoids': Muscle.shoulders,
+    'biceps': Muscle.arms,
+    'triceps': Muscle.arms,
+    'forearm': Muscle.arms,
+    'abs': Muscle.core,
+    'obliques': Muscle.core,
+    'serratus': Muscle.core,
+    'hip-flexors': Muscle.core,
+    'trapezius': Muscle.back,
+    'quadriceps': Muscle.quads,
+    'adductors': Muscle.quads,
+    'calves': Muscle.calves,
+    'tibialis': Muscle.calves,
+  };
+  static const _back = <String, Muscle>{
+    'deltoids': Muscle.shoulders,
+    'triceps': Muscle.arms,
+    'forearm': Muscle.arms,
+    'trapezius': Muscle.back,
+    'upper-back': Muscle.back,
+    'lower-back': Muscle.back,
+    'gluteal': Muscle.glutes,
+    'adductors': Muscle.hamstrings,
+    'hamstring': Muscle.hamstrings,
+    'calves': Muscle.calves,
+  };
+
+  static final Map<String, List<Path>> _cache = {};
+
+  static List<Path> _paths(String key, List<String> svg) => _cache.putIfAbsent(
+        key,
+        () => [for (final d in svg) parseSvgPathData(d)],
+      );
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.scale(size.width / 200, size.height / 420);
-    final outline = Paint()
-      ..color = AppColors.gray400.withValues(alpha: 0.5)
+    final view = back ? kMaleBack : kMaleFront;
+    final map = back ? _back : _front;
+    canvas.scale(size.width / view.w, size.height / view.h);
+    canvas.translate(-view.x, -view.y);
+    final line = Paint()
+      ..color = AppColors.gray400.withValues(alpha: 0.55)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
-    final neutral = Paint()..color = AppColors.container;
-
-    // head, neck, hands and feet (not tracked)
-    canvas.drawCircle(const Offset(100, 34), 22, neutral);
-    canvas.drawCircle(const Offset(100, 34), 22, outline);
-    canvas.drawRRect(_r(90, 54, 110, 78, 6), neutral);
-    for (final r in [
-      _r(28, 240, 52, 262, 10),
-      _r(148, 240, 172, 262, 10),
-      _r(70, 408, 98, 420, 6),
-      _r(102, 408, 130, 420, 6),
-    ]) {
-      canvas.drawRRect(r, neutral);
-    }
-
-    void draw(Muscle m, List<RRect> shapes) {
-      final p = Paint()
-        ..color = recoveryColor(rec[m] ?? 1).withValues(alpha: 0.85);
-      for (final s in shapes) {
-        canvas.drawRRect(s, p);
-        canvas.drawRRect(s, outline);
+    final plain = Paint()..color = AppColors.container;
+    final id = back ? 'b' : 'f';
+    // Plain parts first so muscles draw on top of them.
+    for (final entry in view.parts.entries) {
+      if (map.containsKey(entry.key)) continue;
+      for (final p in _paths('$id:${entry.key}', entry.value)) {
+        canvas.drawPath(p, plain);
+        canvas.drawPath(p, line);
       }
     }
-
-    draw(Muscle.shoulders,
-        [_r(40, 78, 82, 108, 14), _r(118, 78, 160, 108, 14)]);
-    draw(Muscle.arms, [
-      _r(30, 112, 54, 172, 10),
-      _r(146, 112, 170, 172, 10),
-      _r(28, 178, 52, 236, 10),
-      _r(148, 178, 172, 236, 10),
-    ]);
-    if (!back) {
-      draw(Muscle.chest, [_r(60, 84, 98, 132, 12), _r(102, 84, 140, 132, 12)]);
-      draw(Muscle.core, [_r(76, 138, 124, 222, 12)]);
-      draw(Muscle.quads, [_r(66, 232, 98, 332, 14), _r(102, 232, 134, 332, 14)]);
-      draw(Muscle.calves,
-          [_r(70, 338, 96, 406, 12), _r(104, 338, 130, 406, 12)]);
-    } else {
-      draw(Muscle.back, [_r(60, 84, 140, 190, 14)]);
-      draw(Muscle.glutes, [_r(66, 196, 98, 244, 16), _r(102, 196, 134, 244, 16)]);
-      draw(Muscle.hamstrings,
-          [_r(66, 250, 98, 334, 14), _r(102, 250, 134, 334, 14)]);
-      draw(Muscle.calves,
-          [_r(70, 340, 96, 406, 12), _r(104, 340, 130, 406, 12)]);
+    for (final entry in view.parts.entries) {
+      final m = map[entry.key];
+      if (m == null) continue;
+      final fill = Paint()
+        ..color = recoveryColor(rec[m] ?? 1).withValues(alpha: 0.85);
+      for (final p in _paths('$id:${entry.key}', entry.value)) {
+        canvas.drawPath(p, fill);
+        canvas.drawPath(p, line);
+      }
     }
   }
 

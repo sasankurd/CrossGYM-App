@@ -29,6 +29,15 @@ class AboutScreen extends StatelessWidget {
             'from Open Exercise Art by Alex Mollard (CC BY-SA 4.0). See '
             'CREDITS.md for details.',
           ),
+          const SizedBox(height: 16),
+          Text('Body diagram', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 8),
+          const Text(
+            'The muscle outlines on the recovery map come from MuscleMap by '
+            'Melih Colpan (github.com/melihcolpan/MuscleMap), used under the '
+            'MIT License, through the openGym project. The outlines are '
+            'unchanged.',
+          ),
         ],
       ),
     );
