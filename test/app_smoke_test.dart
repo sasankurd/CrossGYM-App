@@ -135,7 +135,7 @@ void main() {
       expectText: 'Achievements', setup: sample);
   screenTest('Leaderboard',
       () => const Scaffold(body: SingleChildScrollView(child: LeaderboardView())),
-      expectText: 'Ranking', setup: sample);
+      expectText: 'RANKING', setup: sample);
   screenTest('Train', () => const PlanScreen(), expectText: 'Training studio');
   screenTest('Fuel', () => const NutritionScreen(embedded: true),
       expectText: 'Precision fuel');

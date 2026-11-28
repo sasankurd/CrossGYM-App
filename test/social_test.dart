@@ -22,8 +22,8 @@ void main() {
     expect(s.rank, RankTier.rookie);
     s.logWorkout(WorkoutType.gym); // First step: bronze, 10 points
     expect(s.achievementPoints, 10);
-    final fresh = s.takeNewMedals();
-    expect(fresh.map((a) => a.title), isEmpty); // first account: nothing announced
+    expect(s.takeNewMedals().map((a) => a.title), ['First step']);
+    expect(s.takeNewMedals(), isEmpty);
     s.addPost('hello', null); // First post: bronze
     expect(s.achievementPoints, 20);
     expect(s.takeNewMedals().map((a) => a.title), ['First post']);
